@@ -1,0 +1,24 @@
+-- code for logging
+
+"$hits" aaa_coverage_tool.bool_tab;
+procedure "$log"(x integer) is
+procedure log(id integer, stm_no integer) is
+    pragma autonomous_transaction;
+  begin
+    update aaa_coverage_statements c
+       set hit = 1
+     where hit = 0
+       and cvr_id = log.id
+       and stm_no = log.stm_no;
+    commit;
+  end;
+
+begin
+ if "$hits" is null then 
+    "$hits" := aaa_coverage_tool.get_statement_tab($id);
+  end if;
+  if x>=1 and x<= "$hits".last and (not "$hits".exists(x) or "$hits"(x) is null) then 
+    log($id,x); 
+    "$hits"(x):=true; 
+ end if;
+end;
