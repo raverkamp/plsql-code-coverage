@@ -69,7 +69,7 @@ public class CodeCoverage {
         return res;
     }
 
-    public PackInfo getPackInfo(String owner, String packname) throws SQLException {
+    public PackInfo getPackInfo( String packname) throws SQLException {
         try (CallableStatement stm = connection.prepareCall(query + " and uo.object_name = ? ")) {
             stm.setString(1, packname);
             try (ResultSet rs = stm.executeQuery()) {
@@ -156,11 +156,12 @@ public class CodeCoverage {
                 StartCoverageFailure fres = new StartCoverageFailure();
                 fres.errormsg = "Error when creating instrument code";
                 return fres;
+            } else {
+                connection.commit();
+                StartCoverageSuccess res2 = new StartCoverageSuccess();
+                res2.id = id;
+                return res2;
             }
-            connection.commit();
-            StartCoverageSuccess res2 = new StartCoverageSuccess();
-            res2.id = id;
-            return res2;
         } finally {
             connection.rollback();
         }
@@ -291,6 +292,10 @@ public class CodeCoverage {
             return b.toString();
         }
     }
+    
+    public String getPackageBodySource(String packageName) throws SQLException {
+        return this.getObjectSource(this.owner,"PACKAGE BODY",packageName);
+    }
 
     boolean isMaybeCovered(String packagename) throws SQLException {
         // heuristic for determinig if a statement is still covered
@@ -298,4 +303,8 @@ public class CodeCoverage {
         String s = getObjectSource(this.owner, "PACKAGE BODY", packagename);
         return s.contains("\"$log\"");
     }
+    
+     public List<ProcedureAndRange> getProcedureRanges(String s) {
+         return this.stex.getProcedureRanges(s);
+     }
 }

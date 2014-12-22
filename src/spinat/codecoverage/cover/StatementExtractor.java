@@ -23,7 +23,6 @@ public class StatementExtractor {
             this.statementRanges = statementRanges;
             this.firstProcedurePosition = firstProcedurePosition;
         }
-
     }
 
     public static Seq relevant(ArrayList<Token> ts) {
@@ -218,39 +217,41 @@ public class StatementExtractor {
             }
         }
     }
-    
-    public static class ProcedureAndRange {
-        public final String name;
-        public final String paramterString;
-        public final Range range;
-        public ProcedureAndRange (String name,String parameterString,Range range) {
-            this.name = name;
-            this.paramterString = parameterString;
-            this.range = range;
-        }
-    }
+
+
     // extract all top level procdures/functions
     public List<ProcedureAndRange> getProcedureRanges(Ast.PackageBody b) {
         ArrayList<ProcedureAndRange> res = new ArrayList<>();
-        for(Ast.Declaration decl : b.declarations) {
+        for (Ast.Declaration decl : b.declarations) {
             if (decl instanceof Ast.ProcedureDefinition) {
-                
+                Ast.ProcedureDefinition pd = (Ast.ProcedureDefinition) decl;
+                ProcedureAndRange pr = new ProcedureAndRange(pd.procedureheading.name.val, "p", new Range(decl.getStart(), decl.getEnd()));
+                res.add(pr);
             } else if (decl instanceof Ast.FunctionDefinition) {
-                
+                Ast.FunctionDefinition fd = (Ast.FunctionDefinition) decl;
+                ProcedureAndRange pr = new ProcedureAndRange(fd.functionheading.name.val, "p", new Range(decl.getStart(), decl.getEnd()));
+                res.add(pr);
             }
         }
-        
         return Collections.unmodifiableList(res);
-        
     }
-    
+
     public Range bodyStatementsRange(Ast.PackageBody b) {
-        if (b.statements!=null && b.statements.size()>0) {
+        if (b.statements != null && b.statements.size() > 0) {
             return new Range(b.statements.get(0).getStart(),
-                             b.statements.get(b.statements.size()-1).getEnd());
+                    b.statements.get(b.statements.size() - 1).getEnd());
         } else {
             return null;
         }
+    }
+    
+    public List<ProcedureAndRange> getProcedureRanges(String s) {
+        Parser p = new Parser();
+        ArrayList<Token> ts = Scanner.scanAll(s);
+        Seq se = relevant(ts);
+        Res<Ast.PackageBody> r = p.pPackageBody.pa(se);
+        Ast.PackageBody pb = r.v;
+        return getProcedureRanges(pb);
     }
 
 }
