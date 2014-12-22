@@ -201,7 +201,7 @@ public class StatementExtractor {
             Ast.SelectLoopStatement fs = (Ast.SelectLoopStatement) s;
             checkStatements(fs.statements, l);
         } else {
-            throw new RuntimeException("unhandled composite statement:" + s);
+            // no child statements
         }
     }
 

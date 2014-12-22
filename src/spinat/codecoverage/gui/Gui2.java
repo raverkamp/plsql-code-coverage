@@ -422,9 +422,7 @@ public class Gui2 {
             sortedList = new ArrayList<>();
             sortedList.addAll(statements);
             Collections.sort(sortedList, cmpEntry);
-            for(CoveredStatement r :sortedList) {
-                System.out.println(r);
-            }
+           
             int pos = 0;
             while (pos < sortedList.size()) {
                 pos = setStyles(pos);
@@ -432,17 +430,15 @@ public class Gui2 {
         }
 
         private void setStyle(int from, int to, Style style) {
-            System.out.println(" " + from + "-" + to + " " + style);
             if (from == to) {
                 return;
             }
             this.doc.setCharacterAttributes(from, to - from, style, true);
         }
 
-        private int setStyles(final int poss) {
+        private int setStyles(final int startPos) {
             // einstieg mit pos
-            final CoveredStatement cs = sortedList.get(poss);
-            System.out.println("setStyles " + poss + " / " + cs);
+            final CoveredStatement cs = sortedList.get(startPos);
             final Style myStyle;
             if (cs.hit) {
                 myStyle = Gui2.this.greenStyle;
@@ -450,7 +446,7 @@ public class Gui2 {
                 myStyle = Gui2.this.hotStyle;
             }
             int last_end = cs.start;
-            int pos = poss + 1;
+            int pos = startPos + 1;
             while (true) {
                 if (pos >= sortedList.size()) {
                     // last entry no contained elements set your style and return pos+1
@@ -458,7 +454,6 @@ public class Gui2 {
                     return pos;
                 }
                 CoveredStatement next_cs = sortedList.get(pos);
-                System.out.println("next_cs: " +next_cs);
                 if (next_cs.start <= cs.end) {
                     // contained
                     setStyle(last_end, next_cs.start, myStyle);
