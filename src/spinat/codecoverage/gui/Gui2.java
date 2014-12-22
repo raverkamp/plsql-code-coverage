@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -51,20 +52,20 @@ public class Gui2 {
     private final DefaultListModel<ProcedureAndRange> procedureModel;
 
     private final JLabel current_package;
-
     private final JList<PackInfo> packList;
     private final JList<ProcedureAndRange> procList;
-
     private final JTextPane sourceTextPane;
     private final JLabel lblPackinfo;
+    private final JLabel lblProcedures;
 
     private PackInfo currentPackinfo = null;
 
+    // the text Styles for the source view
     Style defStyle;
     Style hotStyle;
     Style greenStyle;
 
-    final void styles() {
+    final void initStyles() {
         Style defaultStyle = StyleContext.getDefaultStyleContext().
                 getStyle(StyleContext.DEFAULT_STYLE);
         defStyle = StyleContext.getDefaultStyleContext().addStyle("hot", defaultStyle);
@@ -89,10 +90,23 @@ public class Gui2 {
 
         frame.setLayout(new BorderLayout());
         JPanel left = new JPanel();
+        installMenues();
         frame.add(left, BorderLayout.WEST);
         left.setLayout(new GridBagLayout());
         left.setPreferredSize(new Dimension(200, 100));
-        left.setBackground(Color.red);
+        //left.setBackground(Color.red);
+
+        {
+            JLabel lblPackages = new JLabel("Packages");
+            lblPackages.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 0;
+            c.weighty = 0;
+            c.weightx = 0;
+            c.anchor = GridBagConstraints.PAGE_START;
+            left.add(lblPackages, c);
+        }
         this.packList = new JList<>();
         this.packModel = new DefaultListModel<>();
         packList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -102,7 +116,7 @@ public class Gui2 {
         {
             GridBagConstraints c = new GridBagConstraints();
             c.gridx = 0;
-            c.gridy = 0;
+            c.gridy = 1;
             c.weighty = 1;
             c.weightx = 1;
             c.fill = GridBagConstraints.BOTH;
@@ -114,9 +128,21 @@ public class Gui2 {
         packList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                pack_selection_change(e);
+                packageSelectionChange(e);
             }
         });
+
+        {
+            lblProcedures = new JLabel("Procs/Funs");
+            lblProcedures.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 2;
+            c.weighty = 0;
+            c.weightx = 0;
+            c.anchor = GridBagConstraints.NORTHWEST;
+            left.add(lblProcedures, c);
+        }
 
         this.procList = new JList<>();
         this.procedureModel = new DefaultListModel<>();
@@ -124,7 +150,7 @@ public class Gui2 {
         {
             GridBagConstraints c = new GridBagConstraints();
             c.gridx = 0;
-            c.gridy = 1;
+            c.gridy = 3;
             c.weighty = 1;
             c.weightx = 1;
             c.fill = GridBagConstraints.BOTH;
@@ -133,7 +159,7 @@ public class Gui2 {
             left.add(jsp, c);
         }
         procList.setCellRenderer(proc_cellrenderer);
-        
+
         procList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -147,10 +173,6 @@ public class Gui2 {
         JPanel top = new JPanel();
         top.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
 
-        top.setBackground(Color.green);
-        //top.setMinimumSize(new Dimension(200, 100));
-        //top.setPreferredSize(new Dimension(200, 100));
-
         JLabel l = new JLabel("Package");
         top.add(l);
         this.current_package = new JLabel();
@@ -160,12 +182,11 @@ public class Gui2 {
         JButton b1 = new JButton(startCoverage);
         top.add(b1);
         startCoverage.setEnabled(false);
-        
 
         JButton b2 = new JButton(stopCoverage);
         top.add(b2);
         stopCoverage.setEnabled(false);
-        
+
         lblPackinfo = new JLabel();
 
         top.add(lblPackinfo);
@@ -174,9 +195,8 @@ public class Gui2 {
         sourceTextPane = new JTextPane();
         // must be here, otherwise too late
         sourceTextPane.setEditorKit(new SourceEditorKit(20));
-        styles();
+        initStyles();
 
-        // AbstractDocument adocl = (AbstractDocument) sourceDocument;
         JScrollPane jspl = new JScrollPane(sourceTextPane);
         jspl.setVerticalScrollBarPolicy(
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -186,6 +206,33 @@ public class Gui2 {
         jspl.setMinimumSize(new Dimension(10, 10));
         sourceTextPane.setEditable(false);
         right.add(jspl, BorderLayout.CENTER);
+    }
+
+    // there are two methods to startup the GUI,
+    //   without a connection string
+    public void start() {
+        try {
+            this.frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+            this.frame.setVisible(true);
+            tryConnect();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    // with a connection String
+    public void start(String connectionDesc) {
+        try {
+            this.frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+            this.frame.setVisible(true);
+            OraConnectionDesc od = OraConnectionDesc.fromString(connectionDesc);
+            OracleConnection c = od.getConnection();
+            if (!setConnection(od, c)) {
+                c.close();
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     static void setFrameIconFromResource(JFrame frame, String resourceName) {
@@ -315,18 +362,18 @@ public class Gui2 {
         }
     };
 
-    private void pack_selection_change(ListSelectionEvent e) {
+    private void packageSelectionChange(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting()) {
             PackInfo pi = (PackInfo) this.packList.getSelectedValue();
             setNewPackInfo(pi);
         }
     }
-    
+
     private void procedureSelectionChanged(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting()) {
             ProcedureAndRange par = this.procList.getSelectedValue();
-            if (par!=null) {
-               this.sourceTextPane.setCaretPosition(par.range.start);
+            if (par != null) {
+                this.sourceTextPane.setCaretPosition(par.range.start);
             }
         }
     }
@@ -356,6 +403,7 @@ public class Gui2 {
                 }
                 List<ProcedureAndRange> prl = this.codeCoverage.getProcedureRanges(source);
                 this.procedureModel.clear();
+                this.lblProcedures.setText("Procs/Funcs in " + pi.name);
                 int i = 0;
                 for (ProcedureAndRange pr : prl) {
                     this.procedureModel.add(i, pr);
@@ -381,6 +429,7 @@ public class Gui2 {
                 this.startCoverage.setEnabled(false);
                 this.stopCoverage.setEnabled(false);
                 this.procedureModel.clear();
+                this.lblProcedures.setText("Procs/Funcs");
                 StyledDocument sd = this.sourceTextPane.getStyledDocument();
                 sd.remove(0, sd.getLength());
             }
@@ -422,7 +471,7 @@ public class Gui2 {
             sortedList = new ArrayList<>();
             sortedList.addAll(statements);
             Collections.sort(sortedList, cmpEntry);
-           
+
             int pos = 0;
             while (pos < sortedList.size()) {
                 pos = setStyles(pos);
@@ -505,8 +554,7 @@ public class Gui2 {
                     }
                 }
             } catch (Exception ex) {
-                Logger.getLogger(Gui2.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
             }
         }
     };
@@ -550,8 +598,8 @@ public class Gui2 {
             }
         }
     };
-    
-     public static boolean askUserForRecreation() {
+
+    public static boolean askUserForRecreation() {
 
         Object[] options = {"Yes",
             "No"};
@@ -565,4 +613,71 @@ public class Gui2 {
                 options[1]);
         return x == JOptionPane.YES_OPTION;
     }
+
+    final void installMenues() {
+        JMenuBar mb = new JMenuBar();
+        this.frame.setJMenuBar(mb);
+        JMenu m = new JMenu("File");
+        mb.add(m);
+
+        m.add(new AbstractAction("Connect") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    tryConnect();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+        m.add(new AbstractAction("Refresh") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    refresh();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+        m.add(Gui2.this.dropCCObjects);
+
+        m.add(new AbstractAction("Quit") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+    }
+    final Action dropCCObjects = new AbstractAction("Drop CodeCoverage Objects") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                Gui2.this.dropDBObjects();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    };
+
+    void dropDBObjects() throws SQLException {
+        DBObjectsInstallation inst = new DBObjectsInstallation(this.connection);
+
+        inst.dropCodeCoverageDBObjects();
+        closeConnection();
+    }
+
+    void closeConnection() throws SQLException {
+        if (this.codeCoverage != null) {
+            this.codeCoverage.close();
+            this.codeCoverage = null;
+            this.connectionDesc = null;
+            this.connection = null;
+            this.refresh();
+        }
+    }
+
 }
