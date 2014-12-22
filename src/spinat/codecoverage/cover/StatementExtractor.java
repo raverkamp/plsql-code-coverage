@@ -177,6 +177,14 @@ public class StatementExtractor {
             if (cs.defaultbranch != null) {
                 checkStatements(cs.defaultbranch, l);
             }
+        } else if (s instanceof Ast.CaseMatchStatement) {
+            Ast.CaseMatchStatement cs = (Ast.CaseMatchStatement) s;
+            for (Ast.ExprAndStatements ct : cs.branches) {
+                checkStatements(ct.statements, l);
+            }
+            if (cs.defaultbranch != null) {
+                checkStatements(cs.defaultbranch, l);
+            }
         } else if (s instanceof Ast.BasicLoopStatement) {
             Ast.BasicLoopStatement sl = (Ast.BasicLoopStatement) s;
             checkStatements(sl.statements, l);
@@ -193,7 +201,7 @@ public class StatementExtractor {
             Ast.SelectLoopStatement fs = (Ast.SelectLoopStatement) s;
             checkStatements(fs.statements, l);
         } else {
-
+            throw new RuntimeException("unhandled composite statement:" + s);
         }
     }
 
@@ -217,7 +225,6 @@ public class StatementExtractor {
             }
         }
     }
-
 
     // extract all top level procdures/functions
     public List<ProcedureAndRange> getProcedureRanges(Ast.PackageBody b) {
@@ -244,7 +251,7 @@ public class StatementExtractor {
             return null;
         }
     }
-    
+
     public List<ProcedureAndRange> getProcedureRanges(String s) {
         Parser p = new Parser();
         ArrayList<Token> ts = Scanner.scanAll(s);
