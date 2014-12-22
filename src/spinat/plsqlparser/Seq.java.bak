@@ -3,8 +3,10 @@ package spinat.plsqlparser;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public final class Seq {
 
+    
     private final ArrayList<Token> l;
     private final int start;
     private final int end;

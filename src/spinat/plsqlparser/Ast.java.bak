@@ -76,6 +76,14 @@ public class Ast {
         }
     }
 
+    // a date constant like date '2011-11-12'
+    public static class CDate extends Expression {
+        public final String val;
+        public CDate(String val) {
+            this.val = val;
+        }
+    }
+    
      public static class DollarDollar extends Expression {
 
         public final String val;

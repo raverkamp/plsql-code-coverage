@@ -3,11 +3,8 @@ package spinat.plsqlparser;
 public abstract class Pa<X> {
     
     // the parser object
-
-   
     // if the value in Res is an object which is of type
     // Ranged then stuff the range infromation into it
-    
     public static <X> Res<X> extendRes(Res<X> r,Seq start) {
         if (r!=null&& (r.v instanceof Ranged)) {
             Ranged ra = (Ranged) r.v;
@@ -26,7 +23,6 @@ public abstract class Pa<X> {
     // you may throw an exception, if you detremine this parser must succeed 
     // but it is not possible.
     protected abstract Res<X> par(Seq s) ;
-    
     
     // call this method to parse, if possible the parsed object
     // is extended with range information, i.e. where it is in the source

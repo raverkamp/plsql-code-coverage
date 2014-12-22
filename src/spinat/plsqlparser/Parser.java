@@ -1353,10 +1353,7 @@ public class Parser {
 
         public Res<Ast.Declaration> par(Seq s) {
             Res<String> r = justkw.pa(s);
-            // fixme: markers do not start with akeyword
-            if (r == null) {
-                return null;
-            }
+            if (r != null) {
             String word = r.v.toLowerCase();
             switch (word) {
                 case "begin":
@@ -1372,11 +1369,12 @@ public class Parser {
                     return paFunctionDefinitionOrDeclaration(s);
                 case "pragma":
                     return paPragma(s);
-
                 case "cursor":
                     return paCursorDefinition(s);
                 default: ;
             }
+            }
+            // variable or exception declaration
             Res<Ast.Declaration> ritem = pItemDeclaration.pa(s);
             if (ritem != null) {
                 return ritem;
@@ -1481,10 +1479,7 @@ public class Parser {
 
     public Res<Ast.Statement> parseStatement(Seq s) {
         Res<String> r = justkw.pa(s);
-        // fixme: markers do not start with akeyword
-        if (r == null) {
-            return null;
-        }
+        if (r != null) {
         switch (r.v) {
             case "end":
             case "exception": // exception block begins
@@ -1547,6 +1542,7 @@ public class Parser {
             // that with is not a procedure or variable name 
             case "with": // with q as (select * from dual) select dummy fromdual into bla from q:
                 return paSQLStatement(s);
+        }
         }
         return paAssignOrCallStatement(s);
     }

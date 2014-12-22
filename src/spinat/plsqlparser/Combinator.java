@@ -117,6 +117,7 @@ public class Combinator {
             public String toString() {
                 return "token(" + tt +")";
             }
+
             @Override
             public Res<String> par(Seq s) {
                 if (s.head().ttype == tt) {
@@ -141,7 +142,6 @@ public class Combinator {
     public final Pa<String> pLabelStart = token(TokenType.LabelStart);
     public final Pa<String> pLabelEnd = token(TokenType.LabelEnd);
     
-
     public Pa<String> forkw(final String kw) {
         return new Pa<String>() {
 

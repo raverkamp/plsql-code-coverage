@@ -1,7 +1,6 @@
 package spinat.plsqlparser;
 
 public class T3<X,Y,Z> {
-
     public final X f1;
     public final Y f2;
     public final Z f3;

@@ -1,6 +1,5 @@
 package spinat.plsqlparser;
 
-
 public class ScanException extends RuntimeException {
 
     // this exception is throw if an error during parsing occurs

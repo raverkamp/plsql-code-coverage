@@ -489,6 +489,12 @@ public class Parser {
             if (s2.equalsIgnoreCase("sql")) {
                 return paSQLAttribute(s);
             }
+            // date '2001-1-1' is expression of type date
+            if (s2.equalsIgnoreCase("date") && s.tail().head().ttype == TokenType.String) {
+                String sc = s.tail().head().str;
+                String sclean = sc.substring(1, sc.length() - 1);
+                return new Res<Expression>(new Ast.CString(sclean.replace("''", "'")), s.tail().tail());
+            }
 
             if (s2.equalsIgnoreCase("new")) {
                 Res<List<Ast.CallPart>> r = paCallParts(s.tail());
@@ -1347,10 +1353,7 @@ public class Parser {
 
         public Res<Ast.Declaration> par(Seq s) {
             Res<String> r = justkw.pa(s);
-            // fixme: markers do not start with akeyword
-            if (r == null) {
-                return null;
-            }
+            if (r != null) {
             String word = r.v.toLowerCase();
             switch (word) {
                 case "begin":
@@ -1366,11 +1369,12 @@ public class Parser {
                     return paFunctionDefinitionOrDeclaration(s);
                 case "pragma":
                     return paPragma(s);
-
                 case "cursor":
                     return paCursorDefinition(s);
                 default: ;
             }
+            }
+            // variable or exception declaration
             Res<Ast.Declaration> ritem = pItemDeclaration.pa(s);
             if (ritem != null) {
                 return ritem;
@@ -1899,6 +1903,7 @@ public class Parser {
         Res<Expression> re = pExpr.pa(r.next);
         Res rt = c.mustp(pkw_then, "expecting then").pa(re.next);
         Res<List<Ast.Statement>> rsl = paStatementList(rt.next);
+        must(rsl,rt.next,"statemnet list");
         List<Ast.ExprAndStatements> l = new ArrayList<>();
         l.add(new Ast.ExprAndStatements(re.v, rsl.v));
 

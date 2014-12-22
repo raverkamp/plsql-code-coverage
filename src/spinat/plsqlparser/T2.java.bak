@@ -1,7 +1,7 @@
 package spinat.plsqlparser;
 
-public class T2<X, Y> {
 
+public class T2<X,Y> {
     public final X f1;
     public final Y f2;
     
