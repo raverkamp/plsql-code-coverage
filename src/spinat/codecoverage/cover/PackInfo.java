@@ -20,4 +20,15 @@ public class PackInfo {
         this.isValid = isValid;
     }
 
+    @Override
+    public String toString() {
+        return "PackInfo{ id=" + this.id
+                + ", owner=" + this.owner
+                + ", name=" + this.name
+                + ", isCovered=" + this.isCovered
+                + ", start=" + this.start
+                + ", end=" + this.end
+                + ", isValid=" + this.isValid + "}";
+    }
+
 }
