@@ -101,7 +101,7 @@ public class DBObjectsInstallation {
     }
 
     public void createDBOBjects() throws SQLException {
-        String sqlsources = Util.getAsciiResource(this.getClass(), "aaa_tables_sequences.sql");
+        String sqlsources = Util.getAsciiResource(this.getClass(), "/aaa_tables_sequences.sql");
         List<String> sql_components = Util.decomposeBySemiColon(sqlsources);
         try (Statement stm = this.connection.createStatement()) {
             for (String s : sql_components) {
@@ -114,7 +114,7 @@ public class DBObjectsInstallation {
                 }
             }
         }
-        String packagefile = Util.getAsciiResource(this.getClass(), "aaa_coverage_tool.pck");
+        String packagefile = Util.getAsciiResource(this.getClass(), "/aaa_coverage_tool.pck");
         List<String> codes = Util.decomposeBySlash(packagefile);
         try (Statement stm = this.connection.createStatement()) {
             for (String s : codes) {
