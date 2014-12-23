@@ -13,14 +13,10 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -73,9 +69,9 @@ public class Gui2 {
         StyleConstants.setFontSize(defStyle, 12);
         StyleConstants.setForeground(defStyle, Color.black);
         hotStyle = StyleContext.getDefaultStyleContext().addStyle("hot", defStyle);
-        StyleConstants.setBackground(hotStyle, Color.red);
+        StyleConstants.setBackground(hotStyle, new Color(255, 200, 200));
         greenStyle = StyleContext.getDefaultStyleContext().addStyle("green", defStyle);
-        StyleConstants.setBackground(greenStyle, Color.lightGray);
+        StyleConstants.setBackground(greenStyle, new Color(200, 255, 200));
     }
 
     public Gui2() {
@@ -121,16 +117,19 @@ public class Gui2 {
             c.weightx = 1;
             c.fill = GridBagConstraints.BOTH;
             c.anchor = GridBagConstraints.PAGE_START;
-            JScrollPane jsp = new JScrollPane(packList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            JScrollPane jsp = new JScrollPane(packList,
+                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
             left.add(jsp, c);
         }
         packList.setCellRenderer(this.pack_cellrenderer);
-        packList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                packageSelectionChange(e);
-            }
-        });
+        packList.getSelectionModel().addListSelectionListener(
+                new ListSelectionListener() {
+                    @Override
+                    public void valueChanged(ListSelectionEvent e) {
+                        packageSelectionChange(e);
+                    }
+                });
 
         {
             lblProcedures = new JLabel("Procs/Funs");
@@ -155,17 +154,20 @@ public class Gui2 {
             c.weightx = 1;
             c.fill = GridBagConstraints.BOTH;
             c.anchor = GridBagConstraints.PAGE_START;
-            JScrollPane jsp = new JScrollPane(procList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            JScrollPane jsp = new JScrollPane(procList,
+                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
             left.add(jsp, c);
         }
         procList.setCellRenderer(proc_cellrenderer);
 
-        procList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                procedureSelectionChanged(e);
-            }
-        });
+        procList.getSelectionModel().addListSelectionListener(
+                new ListSelectionListener() {
+                    @Override
+                    public void valueChanged(ListSelectionEvent e) {
+                        procedureSelectionChanged(e);
+                    }
+                });
         //this.procedureModel.add(0, new ProcedureInfo("Test"));
         JPanel right = new JPanel();
         right.setLayout(new BorderLayout());
@@ -258,7 +260,8 @@ public class Gui2 {
         }
     }
 
-    public boolean setConnection(OraConnectionDesc cd, OracleConnection connection) throws SQLException {
+    public boolean setConnection(OraConnectionDesc cd, OracleConnection connection)
+            throws SQLException {
         connection.setAutoCommit(false);
         DBObjectsInstallation inst = new DBObjectsInstallation(connection);
         final boolean dbOk;
@@ -303,20 +306,16 @@ public class Gui2 {
         this.connection = connection;
         this.connectionDesc = cd;
         frame.setTitle("Code Coverage: " + this.connectionDesc.display());
-        final String user;
-        try (Statement stm = connection.createStatement();
-                ResultSet rs = stm.executeQuery("select user from dual")) {
-            rs.next();
-            user = rs.getString(1);
-        }
-        this.codeCoverage = new CodeCoverage(this.connection, user);
+        this.codeCoverage = new CodeCoverage(this.connection);
         this.refresh();
         return true;
     }
 
     public void refresh() {
         if (this.connection == null) {
+            this.procedureModel.clear();
             this.packModel.clear();
+            this.currentPackinfo = null;
             return;
         }
         try {
@@ -335,8 +334,10 @@ public class Gui2 {
     private DefaultListCellRenderer pack_cellrenderer = new javax.swing.DefaultListCellRenderer() {
 
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            JLabel c = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        public Component getListCellRendererComponent(JList<?> list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
+            JLabel c = (JLabel) super.getListCellRendererComponent(list, value,
+                    index, isSelected, cellHasFocus);
             if (value != null) {
                 PackInfo pi = (PackInfo) value;
                 c.setText(pi.name);
@@ -347,20 +348,23 @@ public class Gui2 {
         }
     };
 
-    private final DefaultListCellRenderer proc_cellrenderer = new javax.swing.DefaultListCellRenderer() {
+    private final DefaultListCellRenderer proc_cellrenderer
+            = new javax.swing.DefaultListCellRenderer() {
 
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            JLabel c = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value != null) {
-                ProcedureAndRange pi = (ProcedureAndRange) value;
-                c.setText(pi.name);
-            } else {
-                c.setText("?");
-            }
-            return c;
-        }
-    };
+                @Override
+                public Component getListCellRendererComponent(JList<?> list, Object value,
+                        int index, boolean isSelected, boolean cellHasFocus) {
+                    JLabel c = (JLabel) super.getListCellRendererComponent(list, value,
+                            index, isSelected, cellHasFocus);
+                    if (value != null) {
+                        ProcedureAndRange pi = (ProcedureAndRange) value;
+                        c.setText(pi.name);
+                    } else {
+                        c.setText("?");
+                    }
+                    return c;
+                }
+            };
 
     private void packageSelectionChange(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting()) {
@@ -401,7 +405,8 @@ public class Gui2 {
                     source = s;
                     this.sourceTextPane.setCaretPosition(0);
                 }
-                List<ProcedureAndRange> prl = this.codeCoverage.getProcedureRanges(source);
+                List<ProcedureAndRange> prl
+                        = this.codeCoverage.getProcedureRanges(source);
                 this.procedureModel.clear();
                 this.lblProcedures.setText("Procs/Funcs in " + pi.name);
                 int i = 0;
@@ -440,26 +445,27 @@ public class Gui2 {
         }
     }
 
-    static java.util.Comparator<CoveredStatement> cmpEntry = new java.util.Comparator<CoveredStatement>() {
-        @Override
-        public int compare(CoveredStatement o1, CoveredStatement o2) {
-            if (o1.start < o2.start) {
-                return -1;
-            }
-            if (o1.start > o2.start) {
-                return 1;
-            }
-            if (o1.end < o2.end) {
-                return -1;
-            }
-            if (o1.end > o2.end) {
-                return 1;
-            }
-            // should not happen unless o1==o2
-            return 0;
+    static java.util.Comparator<CoveredStatement> cmpEntry
+            = new java.util.Comparator<CoveredStatement>() {
+                @Override
+                public int compare(CoveredStatement o1, CoveredStatement o2) {
+                    if (o1.start < o2.start) {
+                        return -1;
+                    }
+                    if (o1.start > o2.start) {
+                        return 1;
+                    }
+                    if (o1.end < o2.end) {
+                        return -1;
+                    }
+                    if (o1.end > o2.end) {
+                        return 1;
+                    }
+                    // should not happen unless o1==o2
+                    return 0;
 
-        }
-    };
+                }
+            };
 
     private class Styler {
 
@@ -538,9 +544,11 @@ public class Gui2 {
                         if (res instanceof CodeCoverage.StartCoverageSuccess) {
                             // OK, nothing todo
                         } else if (res instanceof CodeCoverage.StartCoverageFailure) {
-                            CodeCoverage.StartCoverageFailure fres = (CodeCoverage.StartCoverageFailure) res;
+                            CodeCoverage.StartCoverageFailure fres
+                                    = (CodeCoverage.StartCoverageFailure) res;
                             String msg = fres.errormsg;
-                            JOptionPane.showMessageDialog(frame.getRootPane(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(frame.getRootPane(),
+                                    msg, "Error", JOptionPane.ERROR_MESSAGE);
                         }
                         PackInfo pi2 = codeCoverage.getPackInfo(pi.name);
                         DefaultListModel<PackInfo> lm = Gui2.this.packModel;
@@ -604,7 +612,8 @@ public class Gui2 {
         Object[] options = {"Yes",
             "No"};
         int x = JOptionPane.showOptionDialog(null,
-                "The state of the db objects for code coverage in your DB is messy.\nRecreate them?",
+                "The state of the db objects for code coverage in your DB is messy.\n"
+                + "Recreate them?",
                 "Recreate DB objects?",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
@@ -650,8 +659,8 @@ public class Gui2 {
                 System.exit(0);
             }
         });
-
     }
+
     final Action dropCCObjects = new AbstractAction("Drop CodeCoverage Objects") {
         @Override
         public void actionPerformed(ActionEvent e) {

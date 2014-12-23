@@ -2,8 +2,6 @@ package spinat.codecoverage.cover;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
@@ -25,10 +23,16 @@ public class CodeCoverage {
     final static String tab_detail = "AAA_COVERAGE_STATEMENTS";
     final static String sequence = "AAA_COVERAGE_SEQ";
 
-    public CodeCoverage(Connection con, String owner) {
+    public CodeCoverage(Connection con) {
         this.connection = con;
         this.stex = new StatementExtractor();
-        this.owner = owner;
+        try (Statement stm = connection.createStatement();
+                ResultSet rs = stm.executeQuery("select user from dual")) {
+            rs.next();
+            this.owner = rs.getString(1);
+        } catch(SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void close() {
