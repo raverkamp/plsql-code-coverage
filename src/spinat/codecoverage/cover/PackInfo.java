@@ -9,8 +9,18 @@ public class PackInfo {
     public java.util.Date start;
     public java.util.Date end;
     public boolean isValid;
+    public int totalStatementCount;
+    public int coveredStatementCount;
 
-    public PackInfo(int id, String owner, String name, boolean isCovered, java.util.Date start, java.util.Date end, boolean isValid) {
+    public PackInfo(int id,
+            String owner,
+            String name,
+            boolean isCovered,
+            java.util.Date start,
+            java.util.Date end,
+            boolean isValid,
+            int totalStatementCount,
+            int coveredStatementCount) {
         this.id = id;
         this.owner = owner;
         this.name = name;
@@ -18,6 +28,8 @@ public class PackInfo {
         this.start = start;
         this.end = end;
         this.isValid = isValid;
+        this.totalStatementCount = totalStatementCount;
+        this.coveredStatementCount = coveredStatementCount;
     }
 
     @Override
@@ -28,7 +40,10 @@ public class PackInfo {
                 + ", isCovered=" + this.isCovered
                 + ", start=" + this.start
                 + ", end=" + this.end
-                + ", isValid=" + this.isValid + "}";
+                + ", isValid=" + this.isValid
+                + ", #statements=" + this.totalStatementCount
+                + ", #covered=" + this.coveredStatementCount
+                + "}";
     }
 
 }

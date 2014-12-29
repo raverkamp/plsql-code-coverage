@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -107,7 +108,6 @@ public class Gui2 {
         this.packModel = new DefaultListModel<>();
         packList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         packList.setModel(this.packModel);
-        packList.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         {
             GridBagConstraints c = new GridBagConstraints();
@@ -122,7 +122,7 @@ public class Gui2 {
                     JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
             left.add(jsp, c);
         }
-        packList.setCellRenderer(this.pack_cellrenderer);
+        packList.setCellRenderer(new PackageCellRenderer());
         packList.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
                     @Override
@@ -177,9 +177,18 @@ public class Gui2 {
 
         JLabel l = new JLabel("Package");
         top.add(l);
+        
         this.current_package = new JLabel();
-
+        this.current_package.setOpaque(true);
+        this.current_package.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+        this.current_package.setBackground(Color.white);
         top.add(current_package);
+
+        Dimension  d = l.getPreferredSize();
+
+        Dimension d3 = new Dimension(current_package.getFont().getSize()*30,d.height+6);
+        current_package.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
+        current_package.setPreferredSize(d3);
 
         JButton b1 = new JButton(startCoverage);
         top.add(b1);
@@ -331,23 +340,6 @@ public class Gui2 {
         }
     }
 
-    private DefaultListCellRenderer pack_cellrenderer = new javax.swing.DefaultListCellRenderer() {
-
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                int index, boolean isSelected, boolean cellHasFocus) {
-            JLabel c = (JLabel) super.getListCellRendererComponent(list, value,
-                    index, isSelected, cellHasFocus);
-            if (value != null) {
-                PackInfo pi = (PackInfo) value;
-                c.setText(pi.name);
-            } else {
-                c.setText("?");
-            }
-            return c;
-        }
-    };
-
     private final DefaultListCellRenderer proc_cellrenderer
             = new javax.swing.DefaultListCellRenderer() {
 
@@ -364,6 +356,7 @@ public class Gui2 {
                     }
                     return c;
                 }
+
             };
 
     private void packageSelectionChange(ListSelectionEvent e) {

@@ -30,7 +30,7 @@ public class CodeCoverage {
                 ResultSet rs = stm.executeQuery("select user from dual")) {
             rs.next();
             this.owner = rs.getString(1);
-        } catch(SQLException ex) {
+        } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -44,7 +44,9 @@ public class CodeCoverage {
     }
 
     final static String query = " select uo.object_name as package_name,id, "
-            + " start_date, end_date,uo.status,nvl(c.is_covered,0)"
+            + " start_date, end_date,uo.status,nvl(c.is_covered,0),"
+            + " (select count(*) from aaa_coverage_statements s where s.cvr_id = c.id) as total_statement_count,"
+            + " (select count(*) from aaa_coverage_statements s where s.cvr_id = c.id and s.hit>0) as covered_statement_count"
             + " from user_objects uo "
             + " left join aaa_coverage c on uo.object_name = c.package_name "
             + " where  uo.OBJECT_TYPE = 'PACKAGE BODY' "
@@ -57,7 +59,9 @@ public class CodeCoverage {
                 false,
                 rs.getTimestamp(3),
                 rs.getTimestamp(4),
-                rs.getString(5).equals("VALID"));
+                rs.getString(5).equals("VALID"),
+                rs.getInt(7),
+                rs.getInt(8));
         pi.isCovered = rs.getInt(6) == 1;
         return pi;
     }
@@ -73,7 +77,7 @@ public class CodeCoverage {
         return res;
     }
 
-    public PackInfo getPackInfo( String packname) throws SQLException {
+    public PackInfo getPackInfo(String packname) throws SQLException {
         try (CallableStatement stm = connection.prepareCall(query + " and uo.object_name = ? ")) {
             stm.setString(1, packname);
             try (ResultSet rs = stm.executeQuery()) {
@@ -296,9 +300,9 @@ public class CodeCoverage {
             return b.toString();
         }
     }
-    
+
     public String getPackageBodySource(String packageName) throws SQLException {
-        return this.getObjectSource(this.owner,"PACKAGE BODY",packageName);
+        return this.getObjectSource(this.owner, "PACKAGE BODY", packageName);
     }
 
     boolean isMaybeCovered(String packagename) throws SQLException {
@@ -307,8 +311,8 @@ public class CodeCoverage {
         String s = getObjectSource(this.owner, "PACKAGE BODY", packagename);
         return s.contains("\"$log\"");
     }
-    
-     public List<ProcedureAndRange> getProcedureRanges(String s) {
-         return this.stex.getProcedureRanges(s);
-     }
+
+    public List<ProcedureAndRange> getProcedureRanges(String s) {
+        return this.stex.getProcedureRanges(s);
+    }
 }
