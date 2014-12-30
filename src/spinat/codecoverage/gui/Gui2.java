@@ -5,9 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.Frame;
-import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -16,17 +14,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.StyledDocument;
 import oracle.jdbc.OracleConnection;
 import spinat.codecoverage.cover.CodeCoverage;
 import spinat.codecoverage.cover.CoverageInfo;
@@ -51,29 +43,13 @@ public class Gui2 {
     private final JLabel current_package;
     private final JList<PackInfo> packList;
     private final JList<ProcedureAndRange> procList;
-    private final JTextPane sourceTextPane;
+
     private final JLabel lblPackinfo;
     private final JLabel lblProcedures;
 
+    private final CodeDisplay codeDisplay;
+
     private PackInfo currentPackinfo = null;
-
-    // the text Styles for the source view
-    Style defStyle;
-    Style hotStyle;
-    Style greenStyle;
-
-    final void initStyles() {
-        Style defaultStyle = StyleContext.getDefaultStyleContext().
-                getStyle(StyleContext.DEFAULT_STYLE);
-        defStyle = StyleContext.getDefaultStyleContext().addStyle("hot", defaultStyle);
-        StyleConstants.setFontFamily(defStyle, Font.MONOSPACED);
-        StyleConstants.setFontSize(defStyle, 12);
-        StyleConstants.setForeground(defStyle, Color.black);
-        hotStyle = StyleContext.getDefaultStyleContext().addStyle("hot", defStyle);
-        StyleConstants.setBackground(hotStyle, new Color(255, 200, 200));
-        greenStyle = StyleContext.getDefaultStyleContext().addStyle("green", defStyle);
-        StyleConstants.setBackground(greenStyle, new Color(200, 255, 200));
-    }
 
     public Gui2() {
         this.codeCoverage = null;
@@ -203,20 +179,9 @@ public class Gui2 {
         top.add(lblPackinfo);
         right.add(top, BorderLayout.NORTH);
 
-        sourceTextPane = new JTextPane();
-        // must be here, otherwise too late
-        sourceTextPane.setEditorKit(new SourceEditorKit(20));
-        initStyles();
+        this.codeDisplay = new CodeDisplay();
 
-        JScrollPane jspl = new JScrollPane(sourceTextPane);
-        jspl.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        jspl.setHorizontalScrollBarPolicy(
-                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        jspl.setPreferredSize(new Dimension(250, 145));
-        jspl.setMinimumSize(new Dimension(10, 10));
-        sourceTextPane.setEditable(false);
-        right.add(jspl, BorderLayout.CENTER);
+        right.add(codeDisplay.getComponent(), BorderLayout.CENTER);
     }
 
     // there are two methods to startup the GUI,
@@ -341,7 +306,7 @@ public class Gui2 {
                 i++;
             }
             if (j >= 0) {
-                this.packList.getSelectionModel().setSelectionInterval(j,j);
+                this.packList.getSelectionModel().setSelectionInterval(j, j);
                 setNewPackInfo(this.packList.getModel().getElementAt(j));
             } else {
                 setNewPackInfo(null);
@@ -381,7 +346,7 @@ public class Gui2 {
         if (!e.getValueIsAdjusting()) {
             ProcedureAndRange par = this.procList.getSelectedValue();
             if (par != null) {
-                this.sourceTextPane.setCaretPosition(par.range.start);
+                this.codeDisplay.gotoTextPosition(par.range.start);
             }
         }
     }
@@ -395,19 +360,16 @@ public class Gui2 {
                 this.current_package.setText(pi.name);
                 if (pi.id > 0) {
                     CoverageInfo ci = this.codeCoverage.getCoverInfo(pi.id);
-                    StyledDocument sd = this.sourceTextPane.getStyledDocument();
-                    sd.remove(0, sd.getLength());
-                    sd.insertString(0, ci.source, this.defStyle);
                     source = ci.source;
-                    new Styler().setStyles(sd, ci.entries);
-                    this.sourceTextPane.setCaretPosition(0);
+                    this.codeDisplay.setText(source);
+                    this.codeDisplay.setCoverageStyles(ci.entries);
+
                 } else {
                     String s = this.codeCoverage.getPackageBodySource(pi.name);
-                    StyledDocument sd = this.sourceTextPane.getStyledDocument();
-                    sd.remove(0, sd.getLength());
-                    sd.insertString(0, s, this.defStyle);
+
                     source = s;
-                    this.sourceTextPane.setCaretPosition(0);
+                    this.codeDisplay.setText(source);
+
                 }
                 List<ProcedureAndRange> prl
                         = this.codeCoverage.getProcedureRanges(source);
@@ -439,12 +401,9 @@ public class Gui2 {
                 this.stopCoverage.setEnabled(false);
                 this.procedureModel.clear();
                 this.lblProcedures.setText("Procs/Funcs");
-                StyledDocument sd = this.sourceTextPane.getStyledDocument();
-                sd.remove(0, sd.getLength());
+                this.codeDisplay.setText("");
             }
         } catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        } catch (BadLocationException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -470,61 +429,6 @@ public class Gui2 {
 
                 }
             };
-
-    private class Styler {
-
-        private StyledDocument doc;
-        private ArrayList<CoveredStatement> sortedList;
-
-        public void setStyles(StyledDocument doc, List<CoveredStatement> statements) {
-            this.doc = doc;
-            sortedList = new ArrayList<>();
-            sortedList.addAll(statements);
-            Collections.sort(sortedList, cmpEntry);
-
-            int pos = 0;
-            while (pos < sortedList.size()) {
-                pos = setStyles(pos);
-            }
-        }
-
-        private void setStyle(int from, int to, Style style) {
-            if (from == to) {
-                return;
-            }
-            this.doc.setCharacterAttributes(from, to - from, style, true);
-        }
-
-        private int setStyles(final int startPos) {
-            // einstieg mit pos
-            final CoveredStatement cs = sortedList.get(startPos);
-            final Style myStyle;
-            if (cs.hit) {
-                myStyle = Gui2.this.greenStyle;
-            } else {
-                myStyle = Gui2.this.hotStyle;
-            }
-            int last_end = cs.start;
-            int pos = startPos + 1;
-            while (true) {
-                if (pos >= sortedList.size()) {
-                    // last entry no contained elements set your style and return pos+1
-                    setStyle(last_end, cs.end, myStyle);
-                    return pos;
-                }
-                CoveredStatement next_cs = sortedList.get(pos);
-                if (next_cs.start <= cs.end) {
-                    // contained
-                    setStyle(last_end, next_cs.start, myStyle);
-                    last_end = next_cs.end;
-                    pos = setStyles(pos);
-                } else {
-                    setStyle(last_end, cs.end, myStyle);
-                    return pos;
-                }
-            }
-        }
-    }
 
     // once the selected package is changed:
 // fetch the packinfo from the database, update the list entry
