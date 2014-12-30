@@ -66,7 +66,7 @@ public class Gui2 {
         installMenues();
         frame.add(left, BorderLayout.WEST);
         left.setLayout(new GridBagLayout());
-        left.setPreferredSize(new Dimension(200, 100));
+        left.setPreferredSize(new Dimension(350, 100));
         //left.setBackground(Color.red);
 
         {
@@ -166,13 +166,13 @@ public class Gui2 {
         current_package.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
         current_package.setPreferredSize(d3);
 
-        JButton b1 = new JButton(startCoverage);
+        JButton b1 = new JButton(startCoverageAction);
         top.add(b1);
-        startCoverage.setEnabled(false);
+        startCoverageAction.setEnabled(false);
 
-        JButton b2 = new JButton(stopCoverage);
+        JButton b2 = new JButton(stopCoverageAction);
         top.add(b2);
-        stopCoverage.setEnabled(false);
+        stopCoverageAction.setEnabled(false);
 
         lblPackinfo = new JLabel();
 
@@ -381,24 +381,24 @@ public class Gui2 {
                     i++;
                 }
                 if (pi.isValid && !pi.isCovered) {
-                    this.startCoverage.setEnabled(false);
+                    this.startCoverageAction.setEnabled(false);
                 } else {
-                    this.startCoverage.setEnabled(false);
+                    this.startCoverageAction.setEnabled(false);
                 }
 
                 if (pi.isCovered) {
-                    this.stopCoverage.setEnabled(true);
+                    this.stopCoverageAction.setEnabled(true);
                 } else {
-                    this.stopCoverage.setEnabled(false);
+                    this.stopCoverageAction.setEnabled(false);
                 }
                 if (!pi.isCovered && pi.isValid) {
-                    this.startCoverage.setEnabled(true);
+                    this.startCoverageAction.setEnabled(true);
                 } else {
-                    this.startCoverage.setEnabled(false);
+                    this.startCoverageAction.setEnabled(false);
                 }
             } else {
-                this.startCoverage.setEnabled(false);
-                this.stopCoverage.setEnabled(false);
+                this.startCoverageAction.setEnabled(false);
+                this.stopCoverageAction.setEnabled(false);
                 this.procedureModel.clear();
                 this.lblProcedures.setText("Procs/Funcs");
                 this.codeDisplay.setText("");
@@ -438,80 +438,87 @@ public class Gui2 {
 //  fill the procedure info list
 //  fill the source text control
 //  at least the database access should not be done on the EDT.
-    Action startCoverage = new AbstractAction("Start Coverage") {
+    void startCoverage() {
+        try {
+            PackInfo pi = currentPackinfo;
+            if (pi != null) {
+                if (pi.start == null || pi.end != null) {
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            try {
-                PackInfo pi = currentPackinfo;
-                if (pi != null) {
-                    if (pi.start == null || pi.end != null) {
-
-                        CodeCoverage.StartCoverageResult res
-                                = codeCoverage.startCoverage(pi.name);
-                        if (res instanceof CodeCoverage.StartCoverageSuccess) {
-                            // OK, nothing todo
-                        } else if (res instanceof CodeCoverage.StartCoverageFailure) {
-                            CodeCoverage.StartCoverageFailure fres
-                                    = (CodeCoverage.StartCoverageFailure) res;
-                            String msg = fres.errormsg;
-                            JOptionPane.showMessageDialog(frame.getRootPane(),
-                                    msg, "Error", JOptionPane.ERROR_MESSAGE);
-                        }
-                        PackInfo pi2 = codeCoverage.getPackInfo(pi.name);
-                        DefaultListModel<PackInfo> lm = Gui2.this.packModel;
-                        for (int i = 0; i < lm.size(); i++) {
-                            if (lm.getElementAt(i).name.equals(pi2.name)) {
-                                lm.setElementAt(pi2, i);
-                                setNewPackInfo(pi2);
-                                break;
-                            }
+                    CodeCoverage.StartCoverageResult res
+                            = codeCoverage.startCoverage(pi.name);
+                    if (res instanceof CodeCoverage.StartCoverageSuccess) {
+                        // OK, nothing todo
+                    } else if (res instanceof CodeCoverage.StartCoverageFailure) {
+                        CodeCoverage.StartCoverageFailure fres
+                                = (CodeCoverage.StartCoverageFailure) res;
+                        String msg = fres.errormsg;
+                        JOptionPane.showMessageDialog(frame.getRootPane(),
+                                msg, "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    PackInfo pi2 = codeCoverage.getPackInfo(pi.name);
+                    DefaultListModel<PackInfo> lm = Gui2.this.packModel;
+                    for (int i = 0; i < lm.size(); i++) {
+                        if (lm.getElementAt(i).name.equals(pi2.name)) {
+                            lm.setElementAt(pi2, i);
+                            setNewPackInfo(pi2);
+                            break;
                         }
                     }
                 }
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
             }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    Action startCoverageAction = new AbstractAction("Start Coverage") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            startCoverage();
         }
     };
 
-    Action stopCoverage = new AbstractAction("Stop Coverage") {
+    void stopCoverage() {
+        try {
+            PackInfo pi = currentPackinfo;
+
+            boolean ok = codeCoverage.stopCoverage(pi.name, false);
+            if (!ok) {
+                Object[] options = {"Yes do it anyway!",
+                    "Leave it as it is.",
+                    "Just mark it as stopped"};
+                int n = JOptionPane.showOptionDialog(frame,
+                        "The source has been changed, set old source again?",
+                        "Replace Sourcè",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null, //do not use a custom Icon
+                        options, //the titles of buttons
+                        options[1]); //default button title
+
+                if (n == 0) {
+                    boolean dummy = codeCoverage.stopCoverage(pi.name, true);
+                }
+            }
+            PackInfo pi2 = codeCoverage.getPackInfo(pi.name);
+            DefaultListModel<PackInfo> lm = Gui2.this.packModel;
+            for (int i = 0; i < lm.size(); i++) {
+                if (lm.getElementAt(i).name.equals(pi2.name)) {
+                    lm.setElementAt(pi2, i);
+                    setNewPackInfo(pi2);
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    Action stopCoverageAction = new AbstractAction("Stop Coverage") {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            try {
-                PackInfo pi = currentPackinfo;
-
-                boolean ok = codeCoverage.stopCoverage(pi.name, false);
-                if (!ok) {
-                    Object[] options = {"Yes do it anyway!",
-                        "Leave it as it is.",
-                        "Just mark it as stopped"};
-                    int n = JOptionPane.showOptionDialog(frame,
-                            "The source has been changed, set old source again?",
-                            "Replace Sourcè",
-                            JOptionPane.DEFAULT_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            null, //do not use a custom Icon
-                            options, //the titles of buttons
-                            options[1]); //default button title
-
-                    if (n == 0) {
-                        boolean dummy = codeCoverage.stopCoverage(pi.name, true);
-                    }
-                }
-                PackInfo pi2 = codeCoverage.getPackInfo(pi.name);
-                DefaultListModel<PackInfo> lm = Gui2.this.packModel;
-                for (int i = 0; i < lm.size(); i++) {
-                    if (lm.getElementAt(i).name.equals(pi2.name)) {
-                        lm.setElementAt(pi2, i);
-                        setNewPackInfo(pi2);
-                        break;
-                    }
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
+            stopCoverage();
         }
     };
 

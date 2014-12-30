@@ -59,5 +59,11 @@ begin
    b(7);
 end;
 
+
+procedure w30wwwwwwwwwwwwwwwwwwwwwwwwwww is
+begin
+  null;
+end;
+
 end;
 /

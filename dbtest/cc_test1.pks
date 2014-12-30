@@ -11,5 +11,7 @@ function f3(x varchar2) return varchar2 deterministic PARALLEL_ENABLE;
 
 procedure bla(x in varchar2);
 
+procedure w30wwwwwwwwwwwwwwwwwwwwwwwwwww;
+
 end;
 /
