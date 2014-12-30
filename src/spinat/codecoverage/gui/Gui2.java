@@ -177,17 +177,17 @@ public class Gui2 {
 
         JLabel l = new JLabel("Package");
         top.add(l);
-        
+
         this.current_package = new JLabel();
         this.current_package.setOpaque(true);
         this.current_package.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
         this.current_package.setBackground(Color.white);
         top.add(current_package);
 
-        Dimension  d = l.getPreferredSize();
+        Dimension d = l.getPreferredSize();
 
-        Dimension d3 = new Dimension(current_package.getFont().getSize()*30,d.height+6);
-        current_package.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
+        Dimension d3 = new Dimension(current_package.getFont().getSize() * 30, d.height + 6);
+        current_package.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
         current_package.setPreferredSize(d3);
 
         JButton b1 = new JButton(startCoverage);
@@ -328,12 +328,23 @@ public class Gui2 {
             return;
         }
         try {
+            PackInfo ci = this.currentPackinfo;
             ArrayList<PackInfo> pis = this.codeCoverage.getCCInfo();
             this.packModel.clear();
             int i = 0;
+            int j = -1;
             for (PackInfo pi : pis) {
                 this.packModel.add(i, pi);
+                if (ci != null && pi.name.equals(ci.name)) {
+                    j = i;
+                }
                 i++;
+            }
+            if (j >= 0) {
+                this.packList.getSelectionModel().setSelectionInterval(j,j);
+                setNewPackInfo(this.packList.getModel().getElementAt(j));
+            } else {
+                setNewPackInfo(null);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -644,7 +655,7 @@ public class Gui2 {
             }
         });
 
-        m.add(Gui2.this.dropCCObjects);
+        m.add(this.dropCCObjects);
 
         m.add(new AbstractAction("Quit") {
             @Override
