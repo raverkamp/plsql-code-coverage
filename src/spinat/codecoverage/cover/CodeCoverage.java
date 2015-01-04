@@ -16,7 +16,7 @@ import java.util.*;
 public class CodeCoverage {
 
     final Connection connection;
-    final StatementExtractor stex;
+  
     final String owner;
     final static String package_name = "AAA_COVERAGE_TOOL";
     final static String tab_master = "AAA_COVERAGE";
@@ -25,7 +25,7 @@ public class CodeCoverage {
 
     public CodeCoverage(Connection con) {
         this.connection = con;
-        this.stex = new StatementExtractor();
+       
         try (Statement stm = connection.createStatement();
                 ResultSet rs = stm.executeQuery("select user from dual")) {
             rs.next();
@@ -191,7 +191,7 @@ public class CodeCoverage {
         final String originalsource;
         byte[] digest = computeMD5ForSource(owner, "PACKAGE BODY", packName);
         try (PreparedStatement stm = connection.prepareStatement(
-                "select ORIGINAL_SOURCE, hash_of_covered_code from aaa_coverage c "
+                "select ORIGINAL_body_SOURCE, hash_of_covered_code from aaa_coverage c "
                 + " where c.package_name = ?")) {
             stm.setString(1, packName);
             try (ResultSet rs = stm.executeQuery()) {
@@ -215,15 +215,17 @@ public class CodeCoverage {
     }
 
     public CoverageInfo getCoverInfo(int id) throws SQLException {
-        final String source;
+        final String specSource;
+        final String bodySource;
         try (CallableStatement stm
                 = connection.prepareCall(
-                        "select id, package_name, original_source, start_date, end_date "
+                        "select original_spec_source,original_body_source "
                         + " from aaa_coverage where id =?")) {
                     stm.setInt(1, id);
                     try (ResultSet rs = stm.executeQuery()) {
                         if (rs.next()) {
-                            source = rs.getString(3);
+                            specSource = rs.getString(1);
+                            bodySource = rs.getString(2);
                         } else {
                             throw new RuntimeException("no code coverage found for id:" + id);
                         }
@@ -241,7 +243,7 @@ public class CodeCoverage {
                             l.add(e);
                         }
                     }
-                    return new CoverageInfo(source, l);
+                    return new CoverageInfo(specSource,bodySource,l);
                 }
     }
 
@@ -304,6 +306,10 @@ public class CodeCoverage {
     public String getPackageBodySource(String packageName) throws SQLException {
         return this.getObjectSource(this.owner, "PACKAGE BODY", packageName);
     }
+ 
+    public String getPackageSpecSource(String packageName) throws SQLException {
+        return this.getObjectSource(this.owner, "PACKAGE", packageName);
+    }
 
     boolean isMaybeCovered(String packagename) throws SQLException {
         // heuristic for determinig if a statement is still covered
@@ -312,7 +318,8 @@ public class CodeCoverage {
         return s.contains("\"$log\"");
     }
 
-    public List<ProcedureAndRange> getProcedureRanges(String s) {
-        return this.stex.getProcedureRanges(s);
+    public List<ProcedureAndRange> getProcedureRanges(String specSource,String bodySource) {
+        StatementExtractor stex = new StatementExtractor(specSource, bodySource);
+        return stex.getProcedureRanges();
     }
 }

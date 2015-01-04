@@ -1,14 +1,15 @@
 package spinat.codecoverage.cover;
 
 public class ProcedureAndRange {
-    public final String name;
-    public final String paramterString;
-    public final Range range;
 
-    public ProcedureAndRange(String name, String parameterString, Range range) {
+    public final String name;
+    public final Range range;
+    public final boolean publik;
+
+    public ProcedureAndRange(String name, boolean publik, Range range) {
         this.name = name;
-        this.paramterString = parameterString;
+        this.publik = publik;
         this.range = range;
     }
-    
+
 }

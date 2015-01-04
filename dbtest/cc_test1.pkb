@@ -65,5 +65,15 @@ begin
   null;
 end;
 
+procedure publik(x varchar2) is
+begin
+  null;
+end;
+
+procedure publik(y varchar2) is
+begin
+  null;
+end;
+
 end;
 /

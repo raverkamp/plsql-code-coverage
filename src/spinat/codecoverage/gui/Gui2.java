@@ -326,7 +326,7 @@ public class Gui2 {
                             index, isSelected, cellHasFocus);
                     if (value != null) {
                         ProcedureAndRange pi = (ProcedureAndRange) value;
-                        c.setText(pi.name);
+                        c.setText(pi.name + (pi.publik ? "*" : ""));
                     } else {
                         c.setText("?");
                     }
@@ -356,23 +356,22 @@ public class Gui2 {
             currentPackinfo = pi;
             this.lblPackinfo.setText("" + pi);
             if (pi != null) {
-                String source;
+                String bodySource;
+                String specSource;
                 this.current_package.setText(pi.name);
                 if (pi.id > 0) {
                     CoverageInfo ci = this.codeCoverage.getCoverInfo(pi.id);
-                    source = ci.source;
-                    this.codeDisplay.setText(source);
+                    bodySource = ci.bodySource;
+                    specSource = ci.specSource;
+                    this.codeDisplay.setText(bodySource);
                     this.codeDisplay.setCoverageStyles(ci.entries);
-
                 } else {
-                    String s = this.codeCoverage.getPackageBodySource(pi.name);
-
-                    source = s;
-                    this.codeDisplay.setText(source);
-
+                    bodySource = this.codeCoverage.getPackageBodySource(pi.name);
+                    specSource = this.codeCoverage.getPackageSpecSource(pi.name);
+                    this.codeDisplay.setText(bodySource);
                 }
                 List<ProcedureAndRange> prl
-                        = this.codeCoverage.getProcedureRanges(source);
+                        = this.codeCoverage.getProcedureRanges(specSource, bodySource);
                 this.procedureModel.clear();
                 this.lblProcedures.setText("Procs/Funcs in " + pi.name);
                 int i = 0;

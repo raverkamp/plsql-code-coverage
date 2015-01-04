@@ -21,10 +21,24 @@ end ;
 /
 create or replace package body aaa_coverage_tool is
 
+  procedure fetch_source(object_name varchar2,object_type varchar2,source out clob) is
+    tmpsrc clob;
+  begin
+   DBMS_LOB.CREATETEMPORARY (tmpsrc,true,DBMS_LOB.CALL);
+    for r in (select *
+                from user_source s
+               where s.name = object_name
+                 and s.TYPE = object_type
+               order by s.line) loop
+       DBMS_LOB.WRITEAPPEND(tmpsrc ,length(r.text), r.text);
+    end loop;
+    source := tmpsrc;
+  end;
 
   procedure start_coverage(pck_name varchar2, id out integer) is
-    sources   clob;
-    sources2  clob;
+    body_source   clob;
+    spec_source   clob;
+    source2  clob;
     t         varchar2(200);
     iscovered integer;
     id_temp integer;
@@ -51,22 +65,15 @@ create or replace package body aaa_coverage_tool is
     select aaa_coverage_seq.nextval into id_temp from dual;
     start_coverage.id := id_temp;
     insert into aaa_coverage
-      (id, package_name, start_date, original_source,is_covered)
+      (id, package_name, start_date, ORIGINAL_body_SOURCE,ORIGINAL_spec_SOURCE,is_covered)
     values
-      (id_temp,pck_name, sysdate, EMPTY_cLOB(),1)
-    returning original_source into sources;
-    -- writing to a lob in atable is cery slow
-    -- so use a temporary lob
-    DBMS_LOB.CREATETEMPORARY ( sources2,true,DBMS_LOB.CALL);
-    for r in (select *
-                from user_source s
-               where s.name = pck_name
-                 and s.TYPE = 'PACKAGE BODY'
-               order by s.line) loop
-       DBMS_LOB.WRITEAPPEND(sources2, length(r.text), r.text);
-    end loop;
-    -- and now copy the lob in one big step
-    dbms_lob.append(sources,sources2);
+      (id_temp,pck_name, sysdate, EMPTY_cLOB(),empty_clob(),1)
+    returning ORIGINAL_body_SOURCE,original_spec_source into body_source,spec_source;
+   
+    fetch_source(pck_name,'PACKAGE BODY',source2);
+    dbms_lob.append(body_source,source2);
+    fetch_source(pck_name,'PACKAGE',source2);
+    dbms_lob.append(spec_source,source2);
   end;
 
   procedure end_coverage(pck_name varchar2) is

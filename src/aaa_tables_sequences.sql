@@ -2,7 +2,8 @@ create table AAA_COVERAGE
 (
   ID              INTEGER not null,
   PACKAGE_NAME    VARCHAR2(30) not null,
-  ORIGINAL_SOURCE CLOB,
+  ORIGINAL_body_SOURCE CLOB,
+  original_spec_source clob,
   IS_COVERED      number(1) not null,
   START_DATE      DATE,
   END_DATE        DATE,

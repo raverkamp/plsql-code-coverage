@@ -35,12 +35,12 @@ public class CodeInstrumenter {
 
     public InstrumentResult instrument(String spec_src, String body_src, BigInteger id) {
 
-        final StatementExtractor stex = new StatementExtractor();
+        final StatementExtractor stex = new StatementExtractor(spec_src,body_src);
 
-        List<String> a = stex.extractRestrictReferences(spec_src);
+        List<String> a = stex.extractRestrictReferences();
         Set<String> excludedProcs = new HashSet<>(a);
 
-        StatementExtractor.ExtractionResult extres = stex.extract(body_src, excludedProcs);
+        StatementExtractor.ExtractionResult extres = stex.extract(excludedProcs);
         List<Range> ranges = extres.statementRanges;
 
         int firstProc = extres.firstProcedurePosition;
