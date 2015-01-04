@@ -15,7 +15,7 @@ procedure w30wwwwwwwwwwwwwwwwwwwwwwwwwww;
 
 -- test for procedures visibility, there is a
 -- private procedure with the same name but a different parameter name
-procedure publik(x varchar2);
+procedure publik(x in varchar2);
 
 end;
 /

@@ -339,8 +339,11 @@ public class StatementExtractor {
         for (Ast.Parameter param : params) {
             sb.append(param.ident.val);
             if (param.parammode != null) {
-                sb.append("/").append(param.parammode.paramModeType);//.name());
+                sb.append("/").append(param.parammode.paramModeType.name());
                 sb.append("/").append(param.parammode.nocopy);
+            } else {
+                sb.append("/").append("IN");
+                sb.append("/").append(false);
             }
             sb.append("/").append(dataTypeToString(param.datatype));
         }
