@@ -352,6 +352,7 @@ public class Gui2 {
     }
 
     void setNewPackInfo(PackInfo pi) {
+        boolean success = false;
         try {
             currentPackinfo = pi;
             this.lblPackinfo.setText("" + pi);
@@ -402,8 +403,17 @@ public class Gui2 {
                 this.lblProcedures.setText("Procs/Funcs");
                 this.codeDisplay.setText("");
             }
+            success = true;
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
+        } finally {
+            if (!success) {
+                this.startCoverageAction.setEnabled(false);
+                this.stopCoverageAction.setEnabled(false);
+                this.procedureModel.clear();
+                this.lblProcedures.setText("");
+                this.codeDisplay.setText("");
+            }
         }
     }
 
