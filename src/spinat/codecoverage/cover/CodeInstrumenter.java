@@ -47,7 +47,7 @@ public class CodeInstrumenter {
         ArrayList<Patch> patches = new ArrayList<>();
 
         Class cl = this.getClass();
-        final String logstufff = Util.getAsciiResource(cl, "/logstuff.txt");
+        final String logstufff = Util.getAsciiResource(cl, "/other-stuff/logstuff.txt");
 
         patches.add(new Patch(firstProc, firstProc, logstufff.replace("$id", "" + id)));
         ArrayList<InstrumentedStatement> is = new ArrayList<>();

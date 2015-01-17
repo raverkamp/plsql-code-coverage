@@ -58,7 +58,7 @@ public class Gui2 {
 
         frame = new JFrame();
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setFrameIconFromResource(frame, "/cc-bild.png");
+        setFrameIconFromResource(frame, "/other-stuff/cc-bild.png");
         frame.setPreferredSize(new Dimension(800, 600));
 
         frame.setLayout(new BorderLayout());
