@@ -1479,10 +1479,7 @@ public class Parser {
 
     public Res<Ast.Statement> parseStatement(Seq s) {
         Res<String> r = justkw.pa(s);
-        // fixme: markers do not start with akeyword
-        if (r == null) {
-            return null;
-        }
+        if (r != null) {
         switch (r.v) {
             case "end":
             case "exception": // exception block begins
@@ -1545,6 +1542,7 @@ public class Parser {
             // that with is not a procedure or variable name 
             case "with": // with q as (select * from dual) select dummy fromdual into bla from q:
                 return paSQLStatement(s);
+        }
         }
         return paAssignOrCallStatement(s);
     }
@@ -1903,7 +1901,6 @@ public class Parser {
         Res<Expression> re = pExpr.pa(r.next);
         Res rt = c.mustp(pkw_then, "expecting then").pa(re.next);
         Res<List<Ast.Statement>> rsl = paStatementList(rt.next);
-        must(rsl,rt.next,"statemnet list");
         List<Ast.ExprAndStatements> l = new ArrayList<>();
         l.add(new Ast.ExprAndStatements(re.v, rsl.v));
 

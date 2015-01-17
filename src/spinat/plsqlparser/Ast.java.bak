@@ -51,6 +51,7 @@ public class Ast {
     }
 
     public static class CallOrIndexOp extends CallPart {
+
         public final List<ActualParam> params;
 
         public CallOrIndexOp(List<ActualParam> params) {
@@ -78,7 +79,9 @@ public class Ast {
 
     // a date constant like date '2011-11-12'
     public static class CDate extends Expression {
+
         public final String val;
+
         public CDate(String val) {
             this.val = val;
         }
@@ -93,8 +96,6 @@ public class Ast {
         }
     }
     
-    
-
     public static class CBool extends Expression {
 
         public final boolean val;
@@ -646,7 +647,9 @@ public class Ast {
         }
     }
 
-    public static abstract class Pragma extends Declaration {};
+    public static abstract class Pragma extends Declaration {
+    };
+
     public static class SimplePragma extends Pragma {// of ident * (Tokens.token list)
 
         public final Ident name;
@@ -659,9 +662,11 @@ public class Ast {
     }
     
     public static class PragmaRestrictReferences extends Declaration {
+
         public final Ident name;
         public final boolean default_; 
         public final List<String> modes;
+
         public PragmaRestrictReferences(Ident name, boolean default_,
         List<String> modes) {
             if (name==null && default_|| name!=null && !default_) {
@@ -808,11 +813,14 @@ public class Ast {
     }
 
     public static class GotoStatement extends Statement {
+
       public final String label;
+
       public GotoStatement(String label) {
           this.label = label;
       }
 }
+
     public static class SqlStatement extends Statement {
 
         public final List<Token> tokens;
@@ -1154,10 +1162,11 @@ public class Ast {
                        | Indices of expression * (expression * expression) option
                        | Values of expression
                                */
+    public static abstract class BoundsClause {
+    }
 
-    public static abstract class BoundsClause {}
-    
     public static class FromToBounds extends BoundsClause {
+    
         public final Expression from;
         public final Expression to;
         
@@ -1169,6 +1178,7 @@ public class Ast {
     
      /*| ForAllStatement of ident * bounds_clause *  (Tokens.token list)*/
     public static class ForAllStatement extends Statement {
+
         public final Ident variable;
         public final BoundsClause bounds;
         public final List<Token> sqloderso;
