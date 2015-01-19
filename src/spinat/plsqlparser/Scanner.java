@@ -75,7 +75,7 @@ public class Scanner {
             if (!(x < len - 1)) {
                 throw new ScanException("unexpected end of comment");
             }
-            if (get(x) == '*' && get(x+1) == '/') {
+            if (get(x) == '*' && get(x + 1) == '/') {
                 return x + 2;
             } else {
                 x++;
@@ -182,7 +182,7 @@ public class Scanner {
     }
 
     int scanDollarDollarIdent(int pos) {
-        int p = scanIdent(pos+2);
+        int p = scanIdent(pos + 2);
         return p;
     }
 
@@ -223,7 +223,7 @@ public class Scanner {
         int x = ScanInt(pos);
         // the problem : for i in 1..10 loop 
         // we only have to check for the second "." *)
-        if (x >= len ||  (get(x)=='.' &&  x + 1 < len && get(x+1) == '.')) {
+        if (x >= len || (get(x) == '.' && x + 1 < len && get(x + 1) == '.')) {
             return tokx(TokenType.Int, x);
         } else {
             final int p;
@@ -284,6 +284,10 @@ public class Scanner {
                 return tok1(TokenType.LParen);
             case ')':
                 return tok1(TokenType.RParen);
+            case '[':
+                return tok1(TokenType.LBracket);
+            case ']':
+                return tok1(TokenType.RBracket);
             case '>':
                 return tok1(TokenType.Greater);
             case '<':
@@ -310,8 +314,8 @@ public class Scanner {
                 return tok1(TokenType.Colon);
             case '!':
                 return tok1(TokenType.Exclamation);
-            case '"' :
-                return tokx(TokenType.QIdent,scanQIdent(this.start));
+            case '"':
+                return tokx(TokenType.QIdent, scanQIdent(this.start));
             default:
                 if (isArabicDigit(c)) {
                     return scanNumber(this.start);
@@ -358,8 +362,8 @@ public class Scanner {
                     return tok2(TokenType.LabelEnd);
                 case "q'":
                     return tokx(TokenType.QString, qString(this.start));
-                case "$$" :
-                    return tokx(TokenType.DollarDollarIdent,scanDollarDollarIdent(this.start));
+                case "$$":
+                    return tokx(TokenType.DollarDollarIdent, scanDollarDollarIdent(this.start));
                 default:
                     if (get(start) == '.' && isArabicDigit(get(start + 1))) {
                         return tokx(TokenType.Float, scanFloat(this.start));
@@ -390,9 +394,9 @@ public class Scanner {
         ArrayList<Token> res = new ArrayList<>();
         int len = s.length();
         Scanner sc = new Scanner(s);
-        int istart =0;
-        while(true) {
-            if (sc.start<len) {
+        int istart = 0;
+        while (true) {
+            if (sc.start < len) {
                 Token t = sc.scan1(istart);
                 if (isRelevant(t)) {
                     res.add(t);
@@ -401,10 +405,10 @@ public class Scanner {
                     res.add(t);
                 }
             } else {
-                res.add(new Token(TokenType.TheEnd,"",sc.start,istart,sc.line,sc.col));
+                res.add(new Token(TokenType.TheEnd, "", sc.start, istart, sc.line, sc.col));
                 return res;
             }
         }
     }
-   
+
 }

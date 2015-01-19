@@ -86,8 +86,8 @@ public class Ast {
             this.val = val;
         }
     }
-    
-     public static class DollarDollar extends Expression {
+
+    public static class DollarDollar extends Expression {
 
         public final String val;
 
@@ -95,7 +95,7 @@ public class Ast {
             this.val = val;
         }
     }
-    
+
     public static class CBool extends Expression {
 
         public final boolean val;
@@ -186,8 +186,8 @@ public class Ast {
         public final Expression expr2;
         public final Expression escape;
         public final boolean not;
-        
-        public LikeExpression(Expression expr1, Expression expr2, Expression escape,boolean not) {
+
+        public LikeExpression(Expression expr1, Expression expr2, Expression escape, boolean not) {
             this.expr1 = expr1;
             this.expr2 = expr2;
             this.escape = escape;
@@ -255,6 +255,30 @@ public class Ast {
         }
     }
 
+    public static final class MultisetExpr extends Expression {
+
+        public final String what;
+        public final Expression e1;
+        public final Expression e2;
+
+        public MultisetExpr(String what, Expression e1, Expression e2) {
+            this.what = what;
+            this.e1 = e1;
+            this.e2 = e2;
+        }
+    }
+
+    public static final class ExtractDatePart extends Expression {
+
+        public final String what;
+        public final Expression expr;
+
+        public ExtractDatePart(String what, Expression expr) {
+            this.what = what;
+            this.expr = expr;
+        }
+    }
+
     public static final class VarOrCallExpression extends Expression {
 
         public final List<CallPart> callparts;
@@ -277,7 +301,7 @@ public class Ast {
 
         public final List<CallPart> attrs;
 
-        public SqlAttribute( List<CallPart> attrs) {
+        public SqlAttribute(List<CallPart> attrs) {
             this.attrs = attrs;
         }
     }
@@ -528,9 +552,9 @@ public class Ast {
 
         public final DataType datatype;
         public final boolean notnull;
-        public final T2<Integer,Integer> range;
+        public final T2<Integer, Integer> range;
 
-        public SubType(DataType datatype,T2<Integer,Integer> range, boolean notnull) {
+        public SubType(DataType datatype, T2<Integer, Integer> range, boolean notnull) {
             this.datatype = datatype;
             this.range = range;
             this.notnull = notnull;
@@ -662,19 +686,19 @@ public class Ast {
             this.what = what;
         }
     }
-    
+
     public static class PragmaRestrictReferences extends Declaration {
 
         public final Ident name;
-        public final boolean default_; 
+        public final boolean default_;
         public final List<String> modes;
 
         public PragmaRestrictReferences(Ident name, boolean default_,
-        List<String> modes) {
-            if (name==null && default_|| name!=null && !default_) {
-            this.name = name;
-            this.default_ = default_;
-            this.modes = modes;
+                List<String> modes) {
+            if (name == null && default_ || name != null && !default_) {
+                this.name = name;
+                this.default_ = default_;
+                this.modes = modes;
             } else {
                 throw new RuntimeException("BUG");
             }
@@ -816,12 +840,12 @@ public class Ast {
 
     public static class GotoStatement extends Statement {
 
-      public final String label;
+        public final String label;
 
-      public GotoStatement(String label) {
-          this.label = label;
-      }
-}
+        public GotoStatement(String label) {
+            this.label = label;
+        }
+    }
 
     public static class SqlStatement extends Statement {
 
@@ -1087,7 +1111,7 @@ public class Ast {
         public final boolean bulkcollect;
         public final Expression limit;
 
-        public FetchStatement(QualId name, List<LValue> lvalues,boolean bulkcollect,Expression limit) {
+        public FetchStatement(QualId name, List<LValue> lvalues, boolean bulkcollect, Expression limit) {
             this.name = name;
             this.lvalues = lvalues;
             this.bulkcollect = bulkcollect;
@@ -1158,40 +1182,40 @@ public class Ast {
             this.usingparameters = usingparameters;
         }
     }
-    
+
     /*
-    datatype bounds_clause = FromTo of expression *expression
-                       | Indices of expression * (expression * expression) option
-                       | Values of expression
-                               */
+     datatype bounds_clause = FromTo of expression *expression
+     | Indices of expression * (expression * expression) option
+     | Values of expression
+     */
     public static abstract class BoundsClause {
     }
 
     public static class FromToBounds extends BoundsClause {
-    
+
         public final Expression from;
         public final Expression to;
-        
+
         public FromToBounds(Expression from, Expression to) {
             this.from = from;
             this.to = to;
         }
     }
-    
-     /*| ForAllStatement of ident * bounds_clause *  (Tokens.token list)*/
+
+    /*| ForAllStatement of ident * bounds_clause *  (Tokens.token list)*/
     public static class ForAllStatement extends Statement {
 
         public final Ident variable;
         public final BoundsClause bounds;
         public final List<Token> sqloderso;
-        
-        public ForAllStatement(Ident variable,BoundsClause bounds, List<Token>  sqloderso) {
+
+        public ForAllStatement(Ident variable, BoundsClause bounds, List<Token> sqloderso) {
             this.variable = variable;
             this.bounds = bounds;
-            this.sqloderso = sqloderso;            
+            this.sqloderso = sqloderso;
         }
     }
-     
+
     /*
      expression (* the sq statement *)
      * (param_mode * expression) list (* the using variables *)

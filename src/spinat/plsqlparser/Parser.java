@@ -87,6 +87,9 @@ public class Parser {
     Pa<String> pkw_out = c.forkw("out");
     Pa<String> pkw_in_out = c.forkw2("in", "out");
     Pa<String> pkw_nocopy = c.forkw("nocopy");
+    Pa<String> pkw_from = c.forkw("from");
+    // do not care about the string, what operators are there else?
+    Pa pkw_multiset_union_all = c.seq2(c.forkw2("multiset", "union"), c.forkw("all"));
 
     Pa<Integer> pNatural = new Pa<Integer>() {
 
@@ -355,7 +358,8 @@ public class Parser {
     }
 
     Res<Expression> paInExpression(Seq s) {
-        Res<Expression> r = paAddExpression(s);
+        // multiset !
+        Res<Expression> r = paMultisetExpression(s);
         if (r == null) {
             return null;
         }
@@ -372,6 +376,26 @@ public class Parser {
             return new Res<Expression>(new Ast.NotExpr(e), r4.next);
         }
 
+    }
+
+    Res<Expression> paMultisetExpression(Seq s) {
+        // fixme
+        Res<Expression> r = paAddExpression(s);
+        if (r == null) {
+            return null;
+        }
+        Expression e = r.v;
+        Seq ss = r.next;
+        while (true) {
+            Res rmu = pkw_multiset_union_all.pa(ss);
+            if (rmu == null) {
+                return new Res<Expression>(e, ss);
+            }
+            Res<Expression> r2 = paAddExpression(rmu.next);
+            must(r2, rmu.next, "expecting an expression");
+            e = new Ast.MultisetExpr("multi", e, r2.v);
+            ss = r2.next;
+        }
     }
 
     Res<Expression> paAddExpression(Seq s) {
@@ -504,7 +528,7 @@ public class Parser {
         }
         if (tt == TokenType.DollarDollarIdent) {
             String str = s.head().str.substring(2);
-            return new Res<Expression>(new Ast.DollarDollar(str),s.tail());
+            return new Res<Expression>(new Ast.DollarDollar(str), s.tail());
         }
 
         if (tt == TokenType.Ident) {
@@ -632,7 +656,40 @@ public class Parser {
         return new Res<List<Ast.CallPart>>(l, next);
     }
 
+    Res<Expression> paExtractFunction(Seq s) {
+        Res<Ast.Ident> r = pIdent.pa(s);
+        if (r == null || !r.v.val.equals("EXTRACT")) {
+            return null;
+        }
+        Res r2 = c.pPOpen.pa(r.next);
+        if (r2 == null) {
+            return null;
+        }
+        Res<String> r3 = justkw.pa(r2.next);
+        if (r3 == null) {
+            return null;
+        }
+        if (!(r3.v.equalsIgnoreCase("year")
+                || r3.v.equalsIgnoreCase("month")
+                || r3.v.equalsIgnoreCase("day"))) {
+            return null;
+        }
+        Res r4 = pkw_from.pa(r3.next);
+        if (r4 == null) {
+            return null;
+        }
+        // from here comitted
+        Res<Ast.Expression> r5 = c.mustp(pExpr, "expression").pa(r4.next);
+        Res r6 = c.mustp(c.pPClose, "close paren").pa(r5.next);
+        return new Res<Expression>(new Ast.ExtractDatePart(r3.v.toUpperCase(), r5.v), r6.next);
+    }
+
     Res<Expression> paVariableOrFunctionCall(Seq s) {
+        Res<Expression> r_extract = paExtractFunction(s);
+        if (r_extract != null) {
+            return r_extract;
+        }
+
         Res<List<Ast.CallPart>> r = paCallParts(s);
         if (r == null) {
             return null;
@@ -735,7 +792,8 @@ public class Parser {
         // parametrisierter typ varchar2, varchar ,raw, number
         Res<T2<Ast.Ident, String>> r3 = c.seq2(pIdent, c.pPOpen).pa(s);
         if (r3 != null) {
-            if (r3.v.f1.val.equalsIgnoreCase("varchar2")) {
+            String tyname1 = r3.v.f1.val;
+            if (tyname1.equalsIgnoreCase("varchar2") || tyname1.equalsIgnoreCase("varchar")) {
                 Res<T2<Integer, String>> r99 = c.seq2(pNatural, c.opt(c.or2(c.forkw("char"), c.forkw("byte")))).pa(r3.next);
                 Res r100 = c.mustp(c.pPClose, "expecting ')'").pa(r99.next);
                 return new Res<Ast.DataType>(new Ast.ParameterizedType(r3.v.f1, r99.v.f1, null), r100.next);
@@ -1174,7 +1232,7 @@ public class Parser {
 
         @Override
         public Res<Token> par(Seq s) {
-            if (s.head().ttype == TokenType.Semi||s.head().ttype == TokenType.TheEnd) {
+            if (s.head().ttype == TokenType.Semi || s.head().ttype == TokenType.TheEnd) {
                 return null;
             } else {
                 return new Res<>(s.head(), s.tail());
@@ -1399,25 +1457,25 @@ public class Parser {
         public Res<Ast.Declaration> par(Seq s) {
             Res<String> r = justkw.pa(s);
             if (r != null) {
-            String word = r.v.toLowerCase();
-            switch (word) {
-                case "begin":
-                case "end":
-                    return null;
-                case "type":
-                    return paTypeDefinition(s);
-                case "subtype":
-                    return paSubTypeDeclaration(s);
-                case "procedure":
-                    return paProcedureDefinitionOrDeclaration(s);
-                case "function":
-                    return paFunctionDefinitionOrDeclaration(s);
-                case "pragma":
-                    return paPragma(s);
-                case "cursor":
-                    return paCursorDefinition(s);
-                default: ;
-            }
+                String word = r.v.toLowerCase();
+                switch (word) {
+                    case "begin":
+                    case "end":
+                        return null;
+                    case "type":
+                        return paTypeDefinition(s);
+                    case "subtype":
+                        return paSubTypeDeclaration(s);
+                    case "procedure":
+                        return paProcedureDefinitionOrDeclaration(s);
+                    case "function":
+                        return paFunctionDefinitionOrDeclaration(s);
+                    case "pragma":
+                        return paPragma(s);
+                    case "cursor":
+                        return paCursorDefinition(s);
+                    default: ;
+                }
             }
             // variable or exception declaration
             Res<Ast.Declaration> ritem = pItemDeclaration.pa(s);
@@ -1525,69 +1583,69 @@ public class Parser {
     public Res<Ast.Statement> parseStatement(Seq s) {
         Res<String> r = justkw.pa(s);
         if (r != null) {
-        switch (r.v) {
-            case "end":
-            case "exception": // exception block begins
-            case "when": // next exception list
-            case "else": // next exception list
-            case "elsif": // next exception list
-                return null;
-            case "null":
-                return new Res<Ast.Statement>(new Ast.NullStatement(), r.next);
-            case "savepoint":
-                return paSavePoint(s);
-            case "rollback":
-                return paRollback(s);
-            case "begin":
-                return paBlock_committed(s);
-            case "declare":
-                return paBlock_committed(s);
-            case "for":
-                return paForLoop(s);
-            case "loop":
-                return paSimpleLoop(s);
-            case "while":
-                return paWhileLoopStatement(s);
-            case "case":
-                return paCaseStatement(s);
-            case "raise":
-                return paRaiseStatement(s);
-            case "return":
-                return paReturnStatement(s);
-            case "open":
-                return paOpenStatement(s);
-            case "close":
-                return paCloseStatement(s);
-            case "if":
-                return paIfStatement(s);
-            case "fetch":
-                return paFetchStatement(s);
-            case "exit":
-                return paExitStatement(s);
-            case "continue":
-                return paContinueStatement(s);
-            case "pipe": /*row */
+            switch (r.v) {
+                case "end":
+                case "exception": // exception block begins
+                case "when": // next exception list
+                case "else": // next exception list
+                case "elsif": // next exception list
+                    return null;
+                case "null":
+                    return new Res<Ast.Statement>(new Ast.NullStatement(), r.next);
+                case "savepoint":
+                    return paSavePoint(s);
+                case "rollback":
+                    return paRollback(s);
+                case "begin":
+                    return paBlock_committed(s);
+                case "declare":
+                    return paBlock_committed(s);
+                case "for":
+                    return paForLoop(s);
+                case "loop":
+                    return paSimpleLoop_comitted(s);
+                case "while":
+                    return paWhileLoopStatement(s);
+                case "case":
+                    return paCaseStatement(s);
+                case "raise":
+                    return paRaiseStatement(s);
+                case "return":
+                    return paReturnStatement(s);
+                case "open":
+                    return paOpenStatement(s);
+                case "close":
+                    return paCloseStatement(s);
+                case "if":
+                    return paIfStatement(s);
+                case "fetch":
+                    return paFetchStatement(s);
+                case "exit":
+                    return paExitStatement(s);
+                case "continue":
+                    return paContinueStatement(s);
+                case "pipe": /*row */
 
-                return paPipeRowStatement(s);
-            case "execute": /* execute immediate */
+                    return paPipeRowStatement(s);
+                case "execute": /* execute immediate */
 
-                return paExecuteImmediate(s);
+                    return paExecuteImmediate(s);
 
-            case "goto":
-                return paGotoStatement(s);
-            case "forall":
-                return paForAllStatement(s);
-            case "insert":
-            case "update":
-            case "delete":
-            case "merge":
-            case "select":
-            // with q as (select * from dual) select dummy fromdual into bla from q:
-            // is a valid select sql statement, to be exact we should check 
-            // that with is not a procedure or variable name 
-            case "with": // with q as (select * from dual) select dummy fromdual into bla from q:
-                return paSQLStatement(s);
-        }
+                case "goto":
+                    return paGotoStatement(s);
+                case "forall":
+                    return paForAllStatement(s);
+                case "insert":
+                case "update":
+                case "delete":
+                case "merge":
+                case "select":
+                // with q as (select * from dual) select dummy fromdual into bla from q:
+                // is a valid select sql statement, to be exact we should check 
+                // that with is not a procedure or variable name 
+                case "with": // with q as (select * from dual) select dummy fromdual into bla from q:
+                    return paSQLStatement(s);
+            }
         }
         return paAssignOrCallStatement(s);
     }
@@ -1755,14 +1813,13 @@ public class Parser {
         Res r1 = c.mustp(pkw_loop, "expecting loop").pa(s);
         Res<List<Ast.Statement>> r2 = paStatementList(r1.next);
         Res re = c.mustp(pkw_end_loop, "expecting end loop").pa(r2.next);
-        return new Res<>(r2.v, re.next);
+        Res re2 = c.opt(pIdent).pa(re.next);
+        return new Res<>(r2.v, re2.next);
     }
 
-    Res<Ast.Statement> paSimpleLoop(Seq s) {
-        Res r1 = c.mustp(pkw_loop, "expecting loop").pa(s);
-        Res<List<Ast.Statement>> r2 = paStatementList(r1.next);
-        Res re = c.mustp(pkw_end_loop, " expectingen end loop").pa(r2.next);
-        return new Res<Ast.Statement>(new Ast.BasicLoopStatement(r2.v), re.next);
+    Res<Ast.Statement> paSimpleLoop_comitted(Seq s) {
+        Res<List<Ast.Statement>> r2 = paLoopBody_comitted(s);
+        return new Res<Ast.Statement>(new Ast.BasicLoopStatement(r2.v), r2.next);
     }
 
     Res<Ast.Statement> paWhileLoopStatement(Seq s) {
@@ -1867,10 +1924,11 @@ public class Parser {
             elsestmts = null;
         }
         Res rend_case = pkw_end_case.pa(next);
+        Res rend_case2 = c.opt(pIdent).pa(rend_case.next);
         if (m == null) {
-            return new Res<Ast.Statement>(new Ast.CaseCondStatement(l, elsestmts), rend_case.next);
+            return new Res<Ast.Statement>(new Ast.CaseCondStatement(l, elsestmts), rend_case2.next);
         } else {
-            return new Res<Ast.Statement>(new Ast.CaseMatchStatement(m, l, elsestmts), rend_case.next);
+            return new Res<Ast.Statement>(new Ast.CaseMatchStatement(m, l, elsestmts), rend_case2.next);
         }
     }
 
@@ -1910,7 +1968,7 @@ public class Parser {
             }
         } else {
             // ref cursor 
-            Res rselect = pkw_select.pa(rf.next);
+            Res rselect = c.or2(pkw_select, pkw_with).pa(rf.next);
             if (rselect == null) {
                 Res<Expression> rsql = pExpr.pa(rf.next);
                 Res<T2<String, List<Ast.Expression>>> rusing
