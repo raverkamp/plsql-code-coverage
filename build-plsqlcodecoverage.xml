@@ -42,7 +42,7 @@
     <copy file="${oracjdbclib}" todir="${dist}/lib"/>
     <jar jarfile="${dist}/plsqlcodecoverage.jar" basedir="${build}">
        <!-- needed for the image file -->
-      <fileset dir="src" includes="*"/>
+      <zipfileset dir="src/otherstuff" includes="*" prefix="otherstuff"/>
       <manifest>
         <attribute name="Main-Class"
                    value="spinat.codecoverage.Main"/>
@@ -59,7 +59,7 @@
                    value="spinat.codecoverage.Main"/>
       </manifest>
       <zipfileset src="${oracjdbclib}" excludes="META-INF/*" />
-      <fileset dir="src" includes="*"/>
+      <zipfileset dir="src/otherstuff" includes="*" prefix="otherstuff"/>
     </jar>
   </target>
   
