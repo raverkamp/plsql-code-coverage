@@ -37,12 +37,25 @@ public class Gui2 {
     private OraConnectionDesc connectionDesc;
     private OracleConnection connection;
 
+    private final static class ProcedureInfo {
+
+        public final int statmentCount;
+        public final int hits;
+        public final ProcedureAndRange procedure;
+
+        public ProcedureInfo(ProcedureAndRange procedure, int statmentCount, int hits) {
+            this.procedure = procedure;
+            this.statmentCount = statmentCount;
+            this.hits = hits;
+        }
+    }
+
     private final DefaultListModel<PackInfo> packModel;
-    private final DefaultListModel<ProcedureAndRange> procedureModel;
+    private final DefaultListModel<ProcedureInfo> procedureModel;
 
     private final JLabel current_package;
     private final JList<PackInfo> packList;
-    private final JList<ProcedureAndRange> procList;
+    private final JList<ProcedureInfo> procList;
 
     private final JLabel lblPackinfo;
     private final JLabel lblProcedures;
@@ -316,6 +329,8 @@ public class Gui2 {
         }
     }
 
+    Color  hotColor = new Color(255, 200, 200);
+    Color coolColor = new Color(200, 255, 200);
     private final DefaultListCellRenderer proc_cellrenderer
             = new javax.swing.DefaultListCellRenderer() {
 
@@ -325,8 +340,22 @@ public class Gui2 {
                     JLabel c = (JLabel) super.getListCellRendererComponent(list, value,
                             index, isSelected, cellHasFocus);
                     if (value != null) {
-                        ProcedureAndRange pi = (ProcedureAndRange) value;
-                        c.setText(pi.name + (pi.publik ? "*" : ""));
+                        ProcedureInfo pi = (ProcedureInfo) value;
+                        c.setText(pi.procedure.name + (pi.procedure.publik ? "*" : ""));
+                        if (pi.statmentCount > 0) {
+                            Color col;
+                            if (pi.hits == 0) {
+                                col = hotColor;
+                            } else if (pi.hits == pi.statmentCount) {
+                                col = coolColor;
+                            } else {
+                                double frac =  ((double)pi.hits) / ((double)pi.statmentCount);
+                                col = new Color((int)((1-frac) * hotColor.getRed() + frac * coolColor.getRed()),
+                                        (int)((1-frac) * hotColor.getGreen()+ frac * coolColor.getGreen()),
+                                        hotColor.getBlue());
+                            }
+                            c.setBackground(col);
+                        }
                     } else {
                         c.setText("?");
                     }
@@ -344,9 +373,9 @@ public class Gui2 {
 
     private void procedureSelectionChanged(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting()) {
-            ProcedureAndRange par = this.procList.getSelectedValue();
-            if (par != null) {
-                this.codeDisplay.gotoTextPosition(par.range.start);
+            ProcedureInfo procinfo = this.procList.getSelectedValue();
+            if (procinfo != null) {
+                this.codeDisplay.gotoTextPosition(procinfo.procedure.range.start);
             }
         }
     }
@@ -357,16 +386,18 @@ public class Gui2 {
             currentPackinfo = pi;
             this.lblPackinfo.setText("" + pi);
             if (pi != null) {
-                String bodySource;
-                String specSource;
+                final String bodySource;
+                final String specSource;
                 this.current_package.setText(pi.name);
+                final CoverageInfo ci;
                 if (pi.id > 0) {
-                    CoverageInfo ci = this.codeCoverage.getCoverInfo(pi.id);
+                    ci = this.codeCoverage.getCoverInfo(pi.id);
                     bodySource = ci.bodySource;
                     specSource = ci.specSource;
                     this.codeDisplay.setText(bodySource);
                     this.codeDisplay.setCoverageStyles(ci.entries);
                 } else {
+                    ci = null;
                     bodySource = this.codeCoverage.getPackageBodySource(pi.name);
                     specSource = this.codeCoverage.getPackageSpecSource(pi.name);
                     this.codeDisplay.setText(bodySource);
@@ -377,7 +408,26 @@ public class Gui2 {
                 this.lblProcedures.setText("Procs/Funcs in " + pi.name);
                 int i = 0;
                 for (ProcedureAndRange pr : prl) {
-                    this.procedureModel.add(i, pr);
+                    ProcedureInfo proci;
+                    if (ci != null) {
+                        int statements = 0;
+                        int hits = 0;
+                        for (CoveredStatement cs : ci.entries) {
+                            if (cs.start >= pr.range.start && cs.start <= pr.range.end) {
+                                statements++;
+                                if (cs.hit) {
+                                    hits++;
+                                }
+                            }
+                        }
+                        
+                        proci = new ProcedureInfo(pr, statements, hits);
+                        
+                    } else {
+                        proci = new ProcedureInfo(pr, 0, 0);
+                    }
+
+                    this.procedureModel.add(i, proci);
                     i++;
                 }
                 if (pi.isValid && !pi.isCovered) {
