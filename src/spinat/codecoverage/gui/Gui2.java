@@ -37,19 +37,6 @@ public class Gui2 {
     private OraConnectionDesc connectionDesc;
     private OracleConnection connection;
 
-    private final static class ProcedureInfo {
-
-        public final int statmentCount;
-        public final int hits;
-        public final ProcedureAndRange procedure;
-
-        public ProcedureInfo(ProcedureAndRange procedure, int statmentCount, int hits) {
-            this.procedure = procedure;
-            this.statmentCount = statmentCount;
-            this.hits = hits;
-        }
-    }
-
     private final DefaultListModel<PackInfo> packModel;
     private final DefaultListModel<ProcedureInfo> procedureModel;
 
@@ -65,6 +52,10 @@ public class Gui2 {
     private PackInfo currentPackinfo = null;
 
     public Gui2() {
+
+        Color hotColor = new Color(255, 200, 200);
+        Color coolColor = new Color(200, 255, 200);
+
         this.codeCoverage = null;
         this.connection = null;
         this.connectionDesc = null;
@@ -148,7 +139,7 @@ public class Gui2 {
                     JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
             left.add(jsp, c);
         }
-        procList.setCellRenderer(proc_cellrenderer);
+        procList.setCellRenderer(new ProcedureCellRenderer());
 
         procList.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
@@ -329,41 +320,6 @@ public class Gui2 {
         }
     }
 
-    Color  hotColor = new Color(255, 200, 200);
-    Color coolColor = new Color(200, 255, 200);
-    private final DefaultListCellRenderer proc_cellrenderer
-            = new javax.swing.DefaultListCellRenderer() {
-
-                @Override
-                public Component getListCellRendererComponent(JList<?> list, Object value,
-                        int index, boolean isSelected, boolean cellHasFocus) {
-                    JLabel c = (JLabel) super.getListCellRendererComponent(list, value,
-                            index, isSelected, cellHasFocus);
-                    if (value != null) {
-                        ProcedureInfo pi = (ProcedureInfo) value;
-                        c.setText(pi.procedure.name + (pi.procedure.publik ? "*" : ""));
-                        if (pi.statmentCount > 0) {
-                            Color col;
-                            if (pi.hits == 0) {
-                                col = hotColor;
-                            } else if (pi.hits == pi.statmentCount) {
-                                col = coolColor;
-                            } else {
-                                double frac =  ((double)pi.hits) / ((double)pi.statmentCount);
-                                col = new Color((int)((1-frac) * hotColor.getRed() + frac * coolColor.getRed()),
-                                        (int)((1-frac) * hotColor.getGreen()+ frac * coolColor.getGreen()),
-                                        hotColor.getBlue());
-                            }
-                            c.setBackground(col);
-                        }
-                    } else {
-                        c.setText("?");
-                    }
-                    return c;
-                }
-
-            };
-
     private void packageSelectionChange(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting()) {
             PackInfo pi = (PackInfo) this.packList.getSelectedValue();
@@ -420,9 +376,9 @@ public class Gui2 {
                                 }
                             }
                         }
-                        
+
                         proci = new ProcedureInfo(pr, statements, hits);
-                        
+
                     } else {
                         proci = new ProcedureInfo(pr, 0, 0);
                     }
