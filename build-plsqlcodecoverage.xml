@@ -37,7 +37,7 @@
   </target>
   
   <target name="dist" depends="compile"
-          description="generate the distribution" >
+          description="generate the distribution, with the main jar and a manifest which references the oracle jdbc file" >
     <mkdir dir="${dist}/lib"/>
     <copy file="${oracjdbclib}" todir="${dist}/lib"/>
     <jar jarfile="${dist}/plsqlcodecoverage.jar" basedir="${build}">
