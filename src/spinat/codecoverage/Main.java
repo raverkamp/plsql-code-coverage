@@ -6,7 +6,17 @@ import javax.swing.UIManager.LookAndFeelInfo;
 
 public class Main {
 
+    static String configKey = "spinat.codecoverage";
+
     public static void main(String[] args) throws Exception {
+        spinat.oraclejdbcclassloading.ClassLoaderFactory factoryCL
+                = new spinat.oraclejdbcclassloading.ClassLoaderFactory(configKey);
+
+        if (args.length == 1 && args[0].equals("-clear-jdbc-file")) {
+            factoryCL.clearJDBCFileMemory();
+            System.out.println("cleared JDBC file memory");
+            System.exit(0);
+        }
 
         try {
             for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -19,9 +29,7 @@ public class Main {
             e.printStackTrace(System.err);
         }
 
-        spinat.oraclejdbcclassloading.ClassLoaderFactory f
-                = new spinat.oraclejdbcclassloading.ClassLoaderFactory("spinat.codecoverage");
-        ClassLoader cl = f.mkClassLoader(Main.class.getClassLoader());
+        ClassLoader cl = factoryCL.mkClassLoader(Main.class.getClassLoader());
         Class realMainClass = cl.loadClass("spinat.codecoverage.RealMain");
         Method m = realMainClass.getMethod("main", new String[0].getClass());
         m.invoke(null, (Object) args);

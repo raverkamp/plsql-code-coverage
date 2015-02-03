@@ -8,8 +8,13 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 
-/* create a classLoader that is able to load the Oracle
- * Jdbc classes
+/* class create a classLoader that is able to load the Oracle
+ Jdbc classes
+ the user is asked to locate the Oracle JDBC jar file
+ we assume this is one jar file
+ WHY: I want to ready to run Jar file, but I do not want to include a Jar file.
+ for programs that connect Oracle databases the user usually 
+ already has am Oracle installation and therefore the jar file
  */
 public class ClassLoaderFactory {
 
@@ -32,7 +37,12 @@ public class ClassLoaderFactory {
 
     // the key under whcih to store the name of the oracle JDBC file 
     // in the preferences
-    final static String prefKey = "ORCLE-JDBC-FILE";
+    final static String prefKey = "ORACLE-JDBC-FILE";
+    
+    
+    public void clearJDBCFileMemory() {
+        this.getNode().remove(prefKey);
+    }
 
     JFileChooser fileChooser;
 
@@ -84,13 +94,11 @@ public class ClassLoaderFactory {
         if (checkClassLoaderForOracleJDBCClasses(parent)) {
             return parent;
         }
-        if (! (parent instanceof URLClassLoader)) {
-            JOptionPane.showMessageDialog(null,"<html>The Oracle JDBC classes where not found. You have to add the it to the classpath.</html>",
-                    "Oracle JDBC classes not found.",JOptionPane.ERROR_MESSAGE);
+        if (!(parent instanceof URLClassLoader)) {
+            JOptionPane.showMessageDialog(null, "<html>The Oracle JDBC classes where not found. You have to add the it to the classpath.</html>",
+                    "Oracle JDBC classes not found.", JOptionPane.ERROR_MESSAGE);
         }
-        URLClassLoader baseURLClassLoader = (URLClassLoader) parent; 
-        
-      
+        URLClassLoader baseURLClassLoader = (URLClassLoader) parent;
 
         Preferences p = getNode();
         String s = p.get(prefKey, "");
@@ -108,6 +116,8 @@ public class ClassLoaderFactory {
                 + " from Oracle on your harddisk.</b></p>"
                 + "<p>The JDBC file is located somewhere in the Oracle installation"
                 + " directory and named for example like <tt>ojdbc6.jar</tt>.</p>"
+                + "<p>In a Windows XE installation it is located at "
+                + "<tt>\"C:\\oraclexe\\app\\oracle\\product\\11.2.0\\server\\jdbc\\lib\\ojdbc6.jar\"</tt>.</p>"
                 + "<p>The name of the file will be stored in the configuration."
                 + "The next time you run this program you will not be asked.</p>"
                 + "<p>If there are problems with Oracle classloading you can extend "
