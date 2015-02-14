@@ -44,7 +44,6 @@ public class Gui2 {
     private final JList<PackInfo> packList;
     private final JList<ProcedureInfo> procList;
 
-    private final JLabel lblPackinfo;
     private final JLabel lblProcedures;
 
     private final CodeDisplay codeDisplay;
@@ -71,7 +70,6 @@ public class Gui2 {
         frame.add(left, BorderLayout.WEST);
         left.setLayout(new GridBagLayout());
         left.setPreferredSize(new Dimension(350, 100));
-        //left.setBackground(Color.red);
 
         {
             JLabel lblPackages = new JLabel("Packages");
@@ -112,8 +110,8 @@ public class Gui2 {
                 });
 
         {
-            lblProcedures = new JLabel("Procs/Funs");
-            lblProcedures.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+            this.lblProcedures = new JLabel("Procs/Funs");
+            this.lblProcedures.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
             GridBagConstraints c = new GridBagConstraints();
             c.gridx = 0;
             c.gridy = 2;
@@ -178,13 +176,9 @@ public class Gui2 {
         top.add(b2);
         stopCoverageAction.setEnabled(false);
 
-        lblPackinfo = new JLabel();
-
-        top.add(lblPackinfo);
         right.add(top, BorderLayout.NORTH);
 
         this.codeDisplay = new CodeDisplay();
-
         right.add(codeDisplay.getComponent(), BorderLayout.CENTER);
     }
 
@@ -340,7 +334,6 @@ public class Gui2 {
         boolean success = false;
         try {
             currentPackinfo = pi;
-            this.lblPackinfo.setText("" + pi);
             if (pi != null) {
                 final String bodySource;
                 final String specSource;
