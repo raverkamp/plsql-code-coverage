@@ -16,7 +16,7 @@ import java.util.*;
 public class CodeCoverage {
 
     final Connection connection;
-  
+
     final String owner;
     final static String package_name = "AAA_COVERAGE_TOOL";
     final static String tab_master = "AAA_COVERAGE";
@@ -25,7 +25,7 @@ public class CodeCoverage {
 
     public CodeCoverage(Connection con) {
         this.connection = con;
-       
+
         try (Statement stm = connection.createStatement();
                 ResultSet rs = stm.executeQuery("select user from dual")) {
             rs.next();
@@ -50,6 +50,7 @@ public class CodeCoverage {
             + " from user_objects uo "
             + " left join aaa_coverage c on uo.object_name = c.package_name "
             + " where  uo.OBJECT_TYPE = 'PACKAGE BODY' "
+            // no sql injection problem: package_name is final static string!
             + " and uo.object_name !='" + package_name + "'";
 
     PackInfo packInfoFromRes(ResultSet rs) throws SQLException {
@@ -243,7 +244,7 @@ public class CodeCoverage {
                             l.add(e);
                         }
                     }
-                    return new CoverageInfo(specSource,bodySource,l);
+                    return new CoverageInfo(specSource, bodySource, l);
                 }
     }
 
@@ -306,19 +307,27 @@ public class CodeCoverage {
     public String getPackageBodySource(String packageName) throws SQLException {
         return this.getObjectSource(this.owner, "PACKAGE BODY", packageName);
     }
- 
+
     public String getPackageSpecSource(String packageName) throws SQLException {
         return this.getObjectSource(this.owner, "PACKAGE", packageName);
     }
 
-    boolean isMaybeCovered(String packagename) throws SQLException {
-        // heuristic for determinig if a statement is still covered
-        // very crude
-        String s = getObjectSource(this.owner, "PACKAGE BODY", packagename);
-        return s.contains("\"$log\"");
+    public List<String> possibleCoveredPackages() throws SQLException {
+        try (PreparedStatement pst = this.connection.prepareStatement(
+                "select distinct name from user_source "
+                + "where text like '%\"$log\"%' "
+                + " and type like 'PACKAGE BODY' order by 1");
+                ResultSet rs = pst.executeQuery()) {
+            ArrayList<String> a = new ArrayList<>();
+            while (rs.next()) {
+                a.add(rs.getString(1));
+            }
+            return a;
+        }
     }
 
-    public List<ProcedureAndRange> getProcedureRanges(String specSource,String bodySource) {
+    public List<ProcedureAndRange> getProcedureRanges(String specSource,
+            String bodySource) {
         StatementExtractor stex = new StatementExtractor(specSource, bodySource);
         return stex.getProcedureRanges();
     }

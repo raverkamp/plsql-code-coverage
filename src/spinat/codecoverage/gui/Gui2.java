@@ -332,75 +332,76 @@ public class Gui2 {
 
     void setNewPackInfo(PackInfo pi) {
         boolean success = false;
+        currentPackinfo = pi;
+        if (pi == null) {
+            this.startCoverageAction.setEnabled(false);
+            this.stopCoverageAction.setEnabled(false);
+            this.procedureModel.clear();
+            this.lblProcedures.setText("Procs/Funcs");
+            this.codeDisplay.setText("");
+            this.current_package.setText("");
+            return;
+        }
         try {
-            currentPackinfo = pi;
-            if (pi != null) {
-                final String bodySource;
-                final String specSource;
-                this.current_package.setText(pi.name);
-                final CoverageInfo ci;
-                if (pi.id > 0) {
-                    ci = this.codeCoverage.getCoverInfo(pi.id);
-                    bodySource = ci.bodySource;
-                    specSource = ci.specSource;
-                    this.codeDisplay.setText(bodySource);
-                    this.codeDisplay.setCoverageStyles(ci.entries);
-                } else {
-                    ci = null;
-                    bodySource = this.codeCoverage.getPackageBodySource(pi.name);
-                    specSource = this.codeCoverage.getPackageSpecSource(pi.name);
-                    this.codeDisplay.setText(bodySource);
-                }
-                List<ProcedureAndRange> prl
-                        = this.codeCoverage.getProcedureRanges(specSource, bodySource);
-                this.procedureModel.clear();
-                this.lblProcedures.setText("Procs/Funcs in " + pi.name);
-                int i = 0;
-                for (ProcedureAndRange pr : prl) {
-                    ProcedureInfo proci;
-                    if (ci != null) {
-                        int statements = 0;
-                        int hits = 0;
-                        for (CoveredStatement cs : ci.entries) {
-                            if (cs.start >= pr.range.start && cs.start <= pr.range.end) {
-                                statements++;
-                                if (cs.hit) {
-                                    hits++;
-                                }
+            final String bodySource;
+            final String specSource;
+            this.current_package.setText(pi.name);
+            final CoverageInfo ci;
+            if (pi.id > 0) {
+                ci = this.codeCoverage.getCoverInfo(pi.id);
+                bodySource = ci.bodySource;
+                specSource = ci.specSource;
+                this.codeDisplay.setText(bodySource);
+                this.codeDisplay.setCoverageStyles(ci.entries);
+            } else {
+                ci = null;
+                bodySource = this.codeCoverage.getPackageBodySource(pi.name);
+                specSource = this.codeCoverage.getPackageSpecSource(pi.name);
+                this.codeDisplay.setText(bodySource);
+            }
+            List<ProcedureAndRange> prl
+                    = this.codeCoverage.getProcedureRanges(specSource, bodySource);
+            this.procedureModel.clear();
+            this.lblProcedures.setText("Procs/Funcs in " + pi.name);
+            int i = 0;
+            for (ProcedureAndRange pr : prl) {
+                ProcedureInfo proci;
+                if (ci != null) {
+                    int statements = 0;
+                    int hits = 0;
+                    for (CoveredStatement cs : ci.entries) {
+                        if (cs.start >= pr.range.start && cs.start <= pr.range.end) {
+                            statements++;
+                            if (cs.hit) {
+                                hits++;
                             }
                         }
-
-                        proci = new ProcedureInfo(pr, statements, hits);
-
-                    } else {
-                        proci = new ProcedureInfo(pr, 0, 0);
                     }
 
-                    this.procedureModel.add(i, proci);
-                    i++;
-                }
-                if (pi.isValid && !pi.isCovered) {
-                    this.startCoverageAction.setEnabled(false);
+                    proci = new ProcedureInfo(pr, statements, hits);
+
                 } else {
-                    this.startCoverageAction.setEnabled(false);
+                    proci = new ProcedureInfo(pr, 0, 0);
                 }
 
-                if (pi.isCovered) {
-                    this.stopCoverageAction.setEnabled(true);
-                } else {
-                    this.stopCoverageAction.setEnabled(false);
-                }
-                if (!pi.isCovered && pi.isValid) {
-                    this.startCoverageAction.setEnabled(true);
-                } else {
-                    this.startCoverageAction.setEnabled(false);
-                }
+                this.procedureModel.add(i, proci);
+                i++;
+            }
+            if (pi.isValid && !pi.isCovered) {
+                this.startCoverageAction.setEnabled(false);
             } else {
                 this.startCoverageAction.setEnabled(false);
+            }
+
+            if (pi.isCovered) {
+                this.stopCoverageAction.setEnabled(true);
+            } else {
                 this.stopCoverageAction.setEnabled(false);
-                this.procedureModel.clear();
-                this.lblProcedures.setText("Procs/Funcs");
-                this.codeDisplay.setText("");
+            }
+            if (!pi.isCovered && pi.isValid) {
+                this.startCoverageAction.setEnabled(true);
+            } else {
+                this.startCoverageAction.setEnabled(false);
             }
             success = true;
         } catch (SQLException ex) {
@@ -523,27 +524,30 @@ public class Gui2 {
     }
 
     Action stopCoverageAction = new AbstractAction("Stop Coverage") {
-
         @Override
         public void actionPerformed(ActionEvent e) {
             stopCoverage();
         }
     };
 
-    public static boolean askUserForRecreation() {
-
+    public static boolean askYesNo(Component parent, String txt, String title) {
         Object[] options = {"Yes",
             "No"};
-        int x = JOptionPane.showOptionDialog(null,
-                "The state of the db objects for code coverage in your DB is messy.\n"
-                + "Recreate them?",
-                "Recreate DB objects?",
+        int x = JOptionPane.showOptionDialog(parent,
+                txt,
+                title,
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
                 options,
                 options[1]);
         return x == JOptionPane.YES_OPTION;
+    }
+
+    public static boolean askUserForRecreation() {
+        return askYesNo(null,
+                "The state of the db objects for code coverage in your DB is messy.\n"
+                + "Recreate them?", "Recreate DB objects?");
     }
 
     final void installMenues() {
@@ -579,17 +583,75 @@ public class Gui2 {
         m.add(new AbstractAction("Quit") {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (Gui2.this.codeCoverage != null) {
+                    Gui2.this.codeCoverage.close();
+                }
                 System.exit(0);
             }
         });
+    }
+
+    private static String joinStrings(List<String> l, String joiner) {
+        StringBuilder b = new StringBuilder();
+        boolean once = false;
+        for (String s : l) {
+            if (once) {
+                b.append(joiner);
+            } else {
+                once = true;
+            }
+            b.append(s);
+        }
+        return b.toString();
+    }
+
+    boolean dropDBObjectsOk() throws Exception {
+        ArrayList<PackInfo> a = this.codeCoverage.getCCInfo();
+        StringBuilder b = new StringBuilder();
+        boolean once = false;
+        for (PackInfo pi : a) {
+            if (pi.isCovered) {
+                if (once) {
+                    b.append(", ");
+                }
+                b.append(pi.name);
+                once = true;
+            }
+        }
+        if (once) {
+            JOptionPane.showMessageDialog(null,
+                    "The following packages are still covered:\n"
+                    + (b.toString()),
+                    "Packages still covered",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        List<String> p = this.codeCoverage.possibleCoveredPackages();
+        if (p.size() > 0) {
+            String coveredPackges = joinStrings(p, ", ");
+            if (!askYesNo(this.frame, "The following packages still contain"
+                    + " rests of code coverage instrumentaion:\n" + coveredPackges
+                    + "\n"
+                    + "Do you really want to drop the code coverage objects?",
+                    "Instrumentation in Code")) {
+                return false;
+            }
+        }
+        return true;
     }
 
     final Action dropCCObjects = new AbstractAction("Drop CodeCoverage Objects") {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                Gui2.this.dropDBObjects();
-            } catch (SQLException ex) {
+                if (Gui2.this.codeCoverage == null) {
+                    JOptionPane.showMessageDialog(frame, "There is no connection to a database", "No connection", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+                if (dropDBObjectsOk()) {
+                    Gui2.this.dropDBObjects();
+                }
+            } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -608,6 +670,8 @@ public class Gui2 {
             this.codeCoverage = null;
             this.connectionDesc = null;
             this.connection = null;
+            this.currentPackinfo = null;
+            this.frame.setTitle("No connection");
             this.refresh();
         }
     }
