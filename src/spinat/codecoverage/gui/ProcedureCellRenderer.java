@@ -12,8 +12,6 @@ import javax.swing.JList;
 public class ProcedureCellRenderer
         extends javax.swing.DefaultListCellRenderer {
 
-
-
     public ProcedureCellRenderer() {
 
     }
@@ -66,9 +64,9 @@ public class ProcedureCellRenderer
             } else {
                 int h = getIconHeight() * coverageState / 100;
                 g.setColor(Color.green);
-                g.fillRect(x , y, getIconWidth(), h);
+                g.fillRect(x, y, getIconWidth(), h);
                 g.setColor(Color.red);
-                g.fillRect(x , y + h, getIconWidth(), getIconHeight() - h);
+                g.fillRect(x, y + h, getIconWidth(), getIconHeight() - h);
             }
         }
 

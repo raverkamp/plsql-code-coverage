@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import oracle.jdbc.OracleConnection;
 
 final class ThinConnectionDesc extends OraConnectionDesc {
+
     String host;
     int port;
     String service;
@@ -27,5 +28,5 @@ final class ThinConnectionDesc extends OraConnectionDesc {
         String s = "jdbc:oracle:thin:@" + host + ":" + port + ":" + service;
         return (OracleConnection) DriverManager.getConnection(s, user, pwd);
     }
-    
+
 }

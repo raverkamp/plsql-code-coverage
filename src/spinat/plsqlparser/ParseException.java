@@ -5,14 +5,14 @@ package spinat.plsqlparser;
 public class ParseException extends RuntimeException {
 
     private static String positionString(Seq s) {
-        return s.head().line +"/" + s.head().col;
+        return s.head().line + "/" + s.head().col;
     }
-    
+
     public final Seq position;
-    
-    public ParseException(String s,Seq position) {
+
+    public ParseException(String s, Seq position) {
         super(s + " at " + positionString(position));
         this.position = position;
     }
-    
+
 }

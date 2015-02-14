@@ -73,12 +73,12 @@ public class CodeDisplay {
             throw new RuntimeException(e);
         }
     }
-    
+
     public void setCoverageStyles(List<CoveredStatement> statements) {
-        new Styler().setStyles(this.sourceTextPane.getStyledDocument(),statements);
+        new Styler().setStyles(this.sourceTextPane.getStyledDocument(), statements);
     }
-    
-     private class Styler {
+
+    private class Styler {
 
         private StyledDocument doc;
         private ArrayList<CoveredStatement> sortedList;

@@ -12,6 +12,7 @@ import spinat.codecoverage.cover.ProcedureAndRange;
  * @author rav
  */
 final class ProcedureInfo {
+
     public final int statmentCount;
     public final int hits;
     public final ProcedureAndRange procedure;
@@ -21,5 +22,5 @@ final class ProcedureInfo {
         this.statmentCount = statmentCount;
         this.hits = hits;
     }
-    
+
 }

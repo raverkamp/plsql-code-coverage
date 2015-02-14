@@ -38,8 +38,7 @@ public class ClassLoaderFactory {
     // the key under whcih to store the name of the oracle JDBC file 
     // in the preferences
     final static String prefKey = "ORACLE-JDBC-FILE";
-    
-    
+
     public void clearJDBCFileMemory() {
         this.getNode().remove(prefKey);
     }

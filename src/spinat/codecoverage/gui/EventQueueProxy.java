@@ -4,7 +4,7 @@ import java.awt.AWTEvent;
 import java.awt.EventQueue;
 
 public class EventQueueProxy extends EventQueue {
- 
+
     @Override
     protected void dispatchEvent(AWTEvent newEvent) {
         try {
@@ -16,7 +16,7 @@ public class EventQueueProxy extends EventQueue {
                 message = "Fatal: " + t.getClass();
             }
             t.printStackTrace(System.err);
-            ErrorDialog.show(null, "Unhandled Exception", message,t);
+            ErrorDialog.show(null, "Unhandled Exception", message, t);
         }
     }
 }

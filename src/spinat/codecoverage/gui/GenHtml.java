@@ -14,27 +14,27 @@ import spinat.codecoverage.cover.CoveredStatement;
 public class GenHtml {
 
     static java.util.Comparator<CoveredStatement> cmpEntry = new java.util.Comparator<CoveredStatement>() {
-            @Override
-            public int compare(CoveredStatement o1, CoveredStatement o2) {
-                if (o1.start < o2.start) {
-                    return -1;
-                }
-                if (o1.start > o2.start) {
-                    return 1;
-                }
-                if (o1.end < o2.end) {
-                    return -1;
-                }
-                if (o1.end > o2.end) {
-                    return 1;
-                }
-                // should not happen unless o1==o2
-                return 0;
+        @Override
+        public int compare(CoveredStatement o1, CoveredStatement o2) {
+            if (o1.start < o2.start) {
+                return -1;
             }
-        };
-    
+            if (o1.start > o2.start) {
+                return 1;
+            }
+            if (o1.end < o2.end) {
+                return -1;
+            }
+            if (o1.end > o2.end) {
+                return 1;
+            }
+            // should not happen unless o1==o2
+            return 0;
+        }
+    };
+
     void genTree(ArrayList<CoveredStatement> l, TransformerHandler hd, String source) throws Exception {
-        
+
         java.util.Collections.sort(l, cmpEntry);
         int pos[] = new int[]{0};
         while (!l.isEmpty()) {

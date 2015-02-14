@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import oracle.jdbc.OracleConnection;
 
 final class OciConnectionDesc extends OraConnectionDesc {
-   
+
     String tnsname;
 
     public OciConnectionDesc(String user, String pwd, String tnsname) {
@@ -23,5 +23,5 @@ final class OciConnectionDesc extends OraConnectionDesc {
     public OracleConnection getConnection() throws SQLException {
         return (OracleConnection) DriverManager.getConnection("jdbc:oracle:oci:@" + tnsname, user, pwd);
     }
-    
+
 }

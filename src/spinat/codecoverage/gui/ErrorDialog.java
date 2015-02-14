@@ -96,6 +96,5 @@ public class ErrorDialog {
         });
         JOptionPane.showMessageDialog(parentComponent, jc, title, JOptionPane.ERROR_MESSAGE);
     }
-    
-   
+
 }

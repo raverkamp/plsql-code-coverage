@@ -15,13 +15,13 @@ import javax.swing.text.ViewFactory;
 
 public class SourceEditorKit extends StyledEditorKit {
 
-    ViewFactory defaultFactory ;
+    ViewFactory defaultFactory;
 
     @Override
     public ViewFactory getViewFactory() {
         return defaultFactory;
     }
-    
+
     public SourceEditorKit(int linedistance) {
         this.defaultFactory = new WrapColumnFactory(linedistance);
     }
@@ -34,10 +34,11 @@ public class SourceEditorKit extends StyledEditorKit {
     static class WrapColumnFactory implements ViewFactory {
 
         final int linedist;
+
         WrapColumnFactory(int linedist) {
             this.linedist = linedist;
         }
-        
+
         @Override
         public View create(Element elem) {
             //System.out.println(elem);
