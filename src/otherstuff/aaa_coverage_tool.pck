@@ -96,7 +96,7 @@ create or replace package body aaa_coverage_tool is
     end if;
   end;
 
-procedure end_coverage(id integer) is
+  procedure end_coverage(id integer) is
     r          aaa_coverage%rowtype;
     sql_cursor integer;
   begin
@@ -124,10 +124,9 @@ procedure end_coverage(id integer) is
                      txt_end   varchar2) is
   begin
     insert into aaa_coverage_statements
-      (id, cvr_id, stm_no, line_no, start_, END_, txt_start, txt_end, hit)
+      (cvr_id, stm_no, line_no, start_, END_, txt_start, txt_end, hit)
     values
-      (aaa_coverage_seq.nextval,
-       cvr_id,
+      (cvr_id,
        add_line.stm_no,
        -1,
        add_line.start_,
@@ -145,7 +144,7 @@ procedure end_coverage(id integer) is
     delete from aaa_coverage;
   end;
 
-   function get_statement_tab(id integer) return bool_tab is
+  function get_statement_tab(id integer) return bool_tab is
     res bool_tab := bool_tab();
     max_stm_no integer;
   begin

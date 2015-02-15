@@ -24,7 +24,6 @@ alter table aaa_coverage
 
 create table AAA_COVERAGE_STATEMENTS
 (
-  ID        INTEGER not null,
   CVR_ID    INTEGER not null,
   STM_NO    INTEGER not null,
   LINE_NO   INTEGER not null,
@@ -36,7 +35,7 @@ create table AAA_COVERAGE_STATEMENTS
 );
 
 alter table AAA_COVERAGE_STATEMENTS
-  add primary key (ID);
+  add primary key (cvr_id,stm_no);
 
 alter table AAA_COVERAGE_STATEMENTS
   add foreign key (CVR_ID)
