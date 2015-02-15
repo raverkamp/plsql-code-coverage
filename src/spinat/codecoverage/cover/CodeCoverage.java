@@ -215,6 +215,14 @@ public class CodeCoverage {
         return true;
     }
 
+    public void stopCoverageNoSourceReset(String packName) throws SQLException {
+        try (CallableStatement stm = connection.prepareCall("begin aaa_coverage_tool.end_coverage(?); end;")) {
+            stm.setString(1, packName);
+            stm.execute();
+            connection.commit();
+        }
+    }
+
     public CoverageInfo getCoverInfo(int id) throws SQLException {
         final String specSource;
         final String bodySource;

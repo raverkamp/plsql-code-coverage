@@ -496,7 +496,7 @@ public class Gui2 {
                 Object[] options = {"Yes do it anyway!",
                     "Leave it as it is.",
                     "Just mark it as stopped"};
-                int n = JOptionPane.showOptionDialog(frame,
+                int opt = JOptionPane.showOptionDialog(frame,
                         "The source has been changed, set old source again?",
                         "Replace Sourcè",
                         JOptionPane.DEFAULT_OPTION,
@@ -505,8 +505,10 @@ public class Gui2 {
                         options, //the titles of buttons
                         options[1]); //default button title
 
-                if (n == 0) {
+                if (opt == 0) { // stopCoverage 
                     boolean dummy = codeCoverage.stopCoverage(pi.name, true);
+                } else if (opt == 2) { //just mark it as stopped
+                    codeCoverage.stopCoverageNoSourceReset(pi.name);
                 }
             }
             PackInfo pi2 = codeCoverage.getPackInfo(pi.name);
