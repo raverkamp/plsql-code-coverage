@@ -1,9 +1,10 @@
-plsql-codecoverage
+* plsql-codecoverage
 
 plsqlcodecoverage is a program to do code coverages of Oracle PL/SQL code
 running in the database. Currently only code coverage for packages is
 supported.
 
+** How it works
 The program creates the following database objects:
 the tables 
 aaa_coverage
@@ -43,12 +44,15 @@ packages.
 You can only do code coverage for the packages the database user owns.
 It is possible to use a proxy user.
 
-It should be obvious by know that, that the user needs full rights for
+It should be obvious by know, that the user needs full rights for
 the schema, the user has to create/drop tables and packages.
 
 Each schema/user has its own version of the database objects.
 
-How to build
+Needless to say that you should have a copy of your packages. Before instrumemting,
+the original source code is saved into a clob, but one never knows.
+
+** How to build
 
 plsqlodecoverage is currently developed as a netbeans project.
 The platform is java 7, but the root classes are still java 8. 
@@ -58,7 +62,7 @@ The system can also be build with a simple ant build file:
 build-plsqlcodecoverage.xml. 
 
 On windows you need an ant installation and you have to
-set JAVA_HOME correctly. I do this in a configuration script
+set JAVA_HOME correctly. I do this with a configuration script
 which has these contents on my machine:
 
 set java_home=C:\Program Files\Java\jdk1.8.0_25
@@ -69,22 +73,66 @@ set jre7=C:\Program Files (x86)\Java\jre7
 The variables orajdbclib is used in the build for obvious reasons.
 The variable jre7 is used to set the bootclasspath.
 
-run
-%ant% -f build-plsqlcodecoverage.xml dist|dist2
-to build the system.
-The target dist creates a jar file psqlcodecoverage.jar in the directory dist
-and the folder lib in the same directory contains the file ojdbc6.jar
-which is referenced in the manifest of the file psqlcodecoverage.jar.
+To build the system, run
+%ant% -f build-plsqlcodecoverage.xml dist|dist-fat|dist-lean
 
-The target dist2 creates a jar file psqlcodecoverage.jar in the directory dis, 
-this jar file contains the class files of the project as well as the class files
-of the orcale jdbc library.
+The target dist creates a jar file psqlcodecoverage.jar in the directory dist.
+The folder lib in the same directory contains the file ojdbc6.jar
+which is referenced in the manifest of psqlcodecoverage.jar.
 
-run the program with
+The target dist-fat creates a jar file psqlcodecoverage.jar in the directory dist.
+This jar file contains the class files of the project as well as the class files
+of the oracle jdbc library.
+
+The target dist-lean creates a jar file psqlcodecoverage.jar in the directory dist.
+This jar file contains only the class files of the project. The user must supply the 
+Oracle jdbc classes via the classpath variable or command line.
+If the oracle jdbc classes are not found during startup the user has to locate
+the oracle jdbc jar file. The location is stored in the preferences. 
+If the program is started with the single argument "-clear-jdbc-file" the
+location in the preferences is deleted.
+
+** How to use
+Run the program with
 java -jar psqlcodecoverage.jar
 
+If you are using the jar file created by the target dist, the lib directory 
+with the oracle jar file must be in the same directory as psqlcodecoverage.jar.
 
+If you are using the jar file created by the dist-lean target, you are asked 
+to locate the oracle jdbc jar file on first startup. The chosen location will
+be saved.
+Then you will be presented with a login dialog. 
+You can use two kind conenctions
+fat: you just have to supply the tns name
+thin: you have to supply host, port and service for the database
 
+In practice there are problems with the fat type connection. 
+Using this kind of connection loads a dynamic link/shared library into the
+java process. If the library is 32 bit and the java runtime is 64 bit then an 
+exception will be raised. The same the other way around. 
+The thin connection is implemented in pure java and does not have this problem.
 
+The window shows the packages on the left. 
+The letter in front of a package is
+  V for packages that are valid but currently not covered.
+  I for packages that are invalid
+  C for packages that are covered
 
+The red-to-green square in front of a package indicates the coverage state
+of a package, more green => more coverage.
 
+The list below the packages displays the procedures in the currently selected 
+package. The "*"-suffix indicates that a procedure is public, i.e. it is 
+declared in the package specification. Again the square indicates the 
+coverage state of a procedure.
+
+The central text area of the window displays the source code of the currently 
+selected package. Code with green background has been executed, code with
+red background has not been executed. 
+
+The button stop/start coverage are used for starting code coverage and stopping
+code coverage of the currenty selected package.
+After a the code coverage of a package is stopped, the program still shows the
+state of the last code coverage session. Even if the source code of the package 
+is changed.
