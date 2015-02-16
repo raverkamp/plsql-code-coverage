@@ -333,7 +333,7 @@ public class Gui2 {
     void setNewPackInfo(PackInfo pi) {
         boolean success = false;
         currentPackinfo = pi;
-        if (pi == null) {
+        if (pi == null||! pi.isValid) {
             this.startCoverageAction.setEnabled(false);
             this.stopCoverageAction.setEnabled(false);
             this.procedureModel.clear();
