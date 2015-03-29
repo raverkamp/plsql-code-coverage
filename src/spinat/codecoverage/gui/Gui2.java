@@ -26,6 +26,7 @@ import spinat.codecoverage.cover.CoveredStatement;
 import spinat.codecoverage.cover.DBObjectsInstallation;
 import spinat.codecoverage.cover.PackInfo;
 import spinat.codecoverage.cover.ProcedureAndRange;
+import spinat.codecoverage.cover.StatementExtractor;
 import spinat.oraclelogin.OraConnectionDesc;
 import spinat.oraclelogin.OracleLogin;
 
@@ -333,7 +334,7 @@ public class Gui2 {
     void setNewPackInfo(PackInfo pi) {
         boolean success = false;
         currentPackinfo = pi;
-        if (pi == null||! pi.isValid) {
+        if (pi == null || !pi.isValid) {
             this.startCoverageAction.setEnabled(false);
             this.stopCoverageAction.setEnabled(false);
             this.procedureModel.clear();
@@ -359,49 +360,62 @@ public class Gui2 {
                 specSource = this.codeCoverage.getPackageSpecSource(pi.name);
                 this.codeDisplay.setText(bodySource);
             }
-            List<ProcedureAndRange> prl
-                    = this.codeCoverage.getProcedureRanges(specSource, bodySource);
-            this.procedureModel.clear();
-            this.lblProcedures.setText("Procs/Funcs in " + pi.name);
-            int i = 0;
-            for (ProcedureAndRange pr : prl) {
-                ProcedureInfo proci;
-                if (ci != null) {
-                    int statements = 0;
-                    int hits = 0;
-                    for (CoveredStatement cs : ci.entries) {
-                        if (cs.start >= pr.range.start && cs.start <= pr.range.end) {
-                            statements++;
-                            if (cs.hit) {
-                                hits++;
+
+            StatementExtractor.EitherExtractorOrMessage eem
+                    = StatementExtractor.create(specSource, bodySource);
+            if (!eem.isExtractor()) {
+                this.startCoverageAction.setEnabled(false);
+                this.stopCoverageAction.setEnabled(false);
+                this.procedureModel.clear();
+                this.lblProcedures.setText("");
+                this.codeDisplay.setText(bodySource);
+                JOptionPane.showMessageDialog(frame.getRootPane(),
+                        eem.getMessage(), "Error on parsing", JOptionPane.ERROR_MESSAGE);
+            } else {
+                List<ProcedureAndRange> prl
+                        = eem.getExtractor().getProcedureRanges();
+                this.procedureModel.clear();
+                this.lblProcedures.setText("Procs/Funcs in " + pi.name);
+                int i = 0;
+                for (ProcedureAndRange pr : prl) {
+                    ProcedureInfo proci;
+                    if (ci != null) {
+                        int statements = 0;
+                        int hits = 0;
+                        for (CoveredStatement cs : ci.entries) {
+                            if (cs.start >= pr.range.start && cs.start <= pr.range.end) {
+                                statements++;
+                                if (cs.hit) {
+                                    hits++;
+                                }
                             }
                         }
+
+                        proci = new ProcedureInfo(pr, statements, hits);
+
+                    } else {
+                        proci = new ProcedureInfo(pr, 0, 0);
                     }
 
-                    proci = new ProcedureInfo(pr, statements, hits);
-
+                    this.procedureModel.add(i, proci);
+                    i++;
+                }
+                if (pi.isValid && !pi.isCovered) {
+                    this.startCoverageAction.setEnabled(false);
                 } else {
-                    proci = new ProcedureInfo(pr, 0, 0);
+                    this.startCoverageAction.setEnabled(false);
                 }
 
-                this.procedureModel.add(i, proci);
-                i++;
-            }
-            if (pi.isValid && !pi.isCovered) {
-                this.startCoverageAction.setEnabled(false);
-            } else {
-                this.startCoverageAction.setEnabled(false);
-            }
-
-            if (pi.isCovered) {
-                this.stopCoverageAction.setEnabled(true);
-            } else {
-                this.stopCoverageAction.setEnabled(false);
-            }
-            if (!pi.isCovered && pi.isValid) {
-                this.startCoverageAction.setEnabled(true);
-            } else {
-                this.startCoverageAction.setEnabled(false);
+                if (pi.isCovered) {
+                    this.stopCoverageAction.setEnabled(true);
+                } else {
+                    this.stopCoverageAction.setEnabled(false);
+                }
+                if (!pi.isCovered && pi.isValid) {
+                    this.startCoverageAction.setEnabled(true);
+                } else {
+                    this.startCoverageAction.setEnabled(false);
+                }
             }
             success = true;
         } catch (SQLException ex) {

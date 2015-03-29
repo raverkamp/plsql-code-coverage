@@ -8,6 +8,10 @@ procedure p1 is
 begin
   a:= 1;
   null;
+  $if $$PLSQL_DEBUG  $then 
+    null; 
+  $end
+  dbms_output.put_line(a);
 end;
 
 end;

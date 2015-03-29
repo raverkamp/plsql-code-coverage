@@ -7,13 +7,51 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import spinat.plsqlparser.Ast;
+import spinat.plsqlparser.ParseException;
 import spinat.plsqlparser.Parser;
-import spinat.plsqlparser.Res;
+import spinat.plsqlparser.ScanException;
 import spinat.plsqlparser.Scanner;
 import spinat.plsqlparser.Seq;
 import spinat.plsqlparser.Token;
 
 public class StatementExtractor {
+
+    public static class EitherExtractorOrMessage {
+
+        private final String msg;
+        private final StatementExtractor stex;
+
+        public EitherExtractorOrMessage(String msg) {
+            this.msg = msg;
+            this.stex = null;
+        }
+
+        public EitherExtractorOrMessage(StatementExtractor stex) {
+            this.msg = null;
+            this.stex = stex;
+        }
+
+        public boolean isExtractor() {
+            return this.stex != null;
+        }
+
+        public String getMessage() {
+            if (isExtractor()) {
+                throw new RuntimeException("BUG");
+            } else {
+                return this.msg;
+            }
+        }
+
+        public StatementExtractor getExtractor() {
+            if (isExtractor()) {
+                return this.stex;
+            } else {
+                throw new RuntimeException("BUG");
+            }
+        }
+
+    }
 
     public static class ExtractionResult {
 
@@ -32,20 +70,45 @@ public class StatementExtractor {
     final Ast.PackageSpec specAst;
     final Ast.PackageBody bodyAst;
 
-    public StatementExtractor(String specSource, String bodySource) {
-        this.bodySource = bodySource;
+    private StatementExtractor(String specSource, String bodySource, Ast.PackageSpec specAst,
+            Ast.PackageBody bodyAst) {
         this.specSource = specSource;
+        this.bodySource = bodySource;
+        this.specAst = specAst;
+        this.bodyAst = bodyAst;
+
+    }
+
+    public static EitherExtractorOrMessage create(String specSource, String bodySource) {
+        final Ast.PackageSpec specAst;
+
         Parser p = new Parser();
-        {
+        try {
             ArrayList<Token> ts = Scanner.scanAll(specSource);
             Seq se = relevant(ts);
-            this.specAst = p.paPackageSpec(se).v;
+            specAst = p.paPackageSpec(se).v;
+        } catch (ParseException ex) {
+            return new EitherExtractorOrMessage(
+                    "Error when parsing package specification: " + ex.getMessage());
+        } catch (ScanException ex) {
+            return new EitherExtractorOrMessage(
+                    "Error when parsing package specification: " + ex.getMessage());
         }
-        {
+
+        final Ast.PackageBody bodyAst;
+        try {
             ArrayList<Token> ts = Scanner.scanAll(bodySource);
             Seq se = relevant(ts);
-            this.bodyAst = p.pPackageBody.pa(se).v;
+            bodyAst = p.pPackageBody.pa(se).v;
+        } catch (ParseException ex) {
+            return new EitherExtractorOrMessage(
+                    "Error when parsing package body: " + ex.getMessage());
+        } catch (ScanException ex) {
+            return new EitherExtractorOrMessage(
+                    "Error when parsing package body: " + ex.getMessage());
         }
+        return new EitherExtractorOrMessage(
+                new StatementExtractor(specSource, bodySource, specAst, bodyAst));
     }
 
     private static Seq relevant(ArrayList<Token> ts) {

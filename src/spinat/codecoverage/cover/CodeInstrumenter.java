@@ -35,7 +35,12 @@ public class CodeInstrumenter {
 
     public InstrumentResult instrument(String spec_src, String body_src, BigInteger id) {
 
-        final StatementExtractor stex = new StatementExtractor(spec_src, body_src);
+        StatementExtractor.EitherExtractorOrMessage eem 
+                = StatementExtractor.create(spec_src, body_src);
+        if (!eem.isExtractor()) {
+            throw new RuntimeException(eem.getMessage());
+        }
+        final StatementExtractor stex = eem.getExtractor();
 
         List<String> a = stex.extractRestrictReferences();
         Set<String> excludedProcs = new HashSet<>(a);

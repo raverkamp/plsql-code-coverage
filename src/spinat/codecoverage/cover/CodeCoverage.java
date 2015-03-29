@@ -333,10 +333,4 @@ public class CodeCoverage {
             return a;
         }
     }
-
-    public List<ProcedureAndRange> getProcedureRanges(String specSource,
-            String bodySource) {
-        StatementExtractor stex = new StatementExtractor(specSource, bodySource);
-        return stex.getProcedureRanges();
-    }
 }

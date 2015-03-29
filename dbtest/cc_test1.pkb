@@ -31,10 +31,10 @@ begin
   if x is null then
     dbms_output.put_line('null');
   else
-    case x 
+    case x
       when 'a' then dbms_output.put_line('A');
       when 'b' then dbms_output.put_line('B');
-      else dbms_output.put_line('neither A or B'); 
+      else dbms_output.put_line('neither A or B');
     end case;
   end if;
 end;
@@ -75,5 +75,10 @@ begin
   null;
 end;
 
+procedure syntax is
+x integer;
+begin
+  x:= extract(year from sysdate);
+end;
 end;
 /
