@@ -26,3 +26,4 @@ create or replace package csv is
   procedure next_field(o_field out varchar2, o_state out integer);
 
 end csv;
+/
