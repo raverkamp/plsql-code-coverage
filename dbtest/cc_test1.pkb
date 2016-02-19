@@ -80,5 +80,21 @@ x integer;
 begin
   x:= extract(year from sysdate);
 end;
+
+procedure intervaltest is
+a interval day to second;
+begin
+ a:= interval '1' hour;
+ a:= interval '2' minute;
+ a := interval '3' second;
+end;
+
+procedure numbers is
+  v_num number;
+  v_val number;
+begin
+  v_num:= 1234 + (to_number(v_val) - 1.4) / 0.1;
+end;
+
 end;
 /
