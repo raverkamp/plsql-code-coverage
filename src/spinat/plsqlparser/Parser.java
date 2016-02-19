@@ -508,7 +508,7 @@ public class Parser {
 
     public Res<Expression> paAtomExpr(Seq s) {
         TokenType tt = s.head().ttype;
-        if (tt == TokenType.Int) {
+        if (tt == TokenType.Int || tt == TokenType.Float) {
             return new Res<Expression>(new Ast.CNumber(new BigDecimal(s.head().str)), s.tail());
         }
         if (tt == TokenType.String) {
