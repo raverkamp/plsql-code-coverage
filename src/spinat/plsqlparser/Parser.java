@@ -554,6 +554,12 @@ public class Parser {
                 String sclean = sc.substring(1, sc.length() - 1);
                 return new Res<Expression>(new Ast.CString(sclean.replace("''", "'")), s.tail().tail());
             }
+            // interval '8' year|month|day|hour|minute|second is another expression of type date
+            if (s2.equalsIgnoreCase("interval") && s.tail().head().ttype == TokenType.String) {
+                String sc = s.tail().head().str;
+                String sclean = sc.substring(1, sc.length() - 1);
+                return new Res<Expression>(new Ast.CString(sclean.replace("''", "'")), s.tail().tail().tail());
+            }
 
             if (s2.equalsIgnoreCase("new")) {
                 Res<List<Ast.CallPart>> r = paCallParts(s.tail());
