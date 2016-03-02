@@ -96,5 +96,36 @@ begin
   v_num:= 1234 + (to_number(v_val) - 1.4) / 0.1;
 end;
 
+procedure sqlrowcount is
+a integer;
+b integer;
+begin
+dbms_output.put_line('#######################');
+  a:= sql%rowcount;
+  update atable set y=upper(y);
+  a:= sql%rowcount;
+  if a!=4 then
+    raise_application_error(-20000,'fail 1');
+  end if;
+  a:= sql%rowcount;
+  if a!=4 then
+    raise_application_error(-20000,'fail 2');
+  end if;
+  for r in (select * from atable )loop 
+   a:= sql%rowcount;
+  dbms_output.put_line('l '||a);
+  exit;
+  end loop;
+   a:= sql%rowcount;
+   if a!=4 then
+    raise_application_error(-20000,'fail 3');
+   end if;
+  execute immediate 'begin dbms_output.put_Line(''aaaa'');end;';
+a:= sql%rowcount;
+  if a!=1 then
+      raise_application_error(-20000,'fail 4');
+  end if;
+end;
+
 end;
 /

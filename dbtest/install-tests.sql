@@ -1,3 +1,4 @@
+@@atable.sql
 @@CSV.pks
 @@CSV.pkb
 @@cannotparsespec.pks

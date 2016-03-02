@@ -17,5 +17,7 @@ procedure w30wwwwwwwwwwwwwwwwwwwwwwwwwww;
 -- private procedure with the same name but a different parameter name
 procedure publik(x in varchar2);
 
+procedure sqlrowcount;
+
 end;
 /
