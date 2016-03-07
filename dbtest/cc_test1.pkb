@@ -99,18 +99,22 @@ end;
 procedure sqlrowcount is
 a integer;
 b integer;
+v varchar2(200);
 begin
-dbms_output.put_line('#######################');
+  dbms_output.put_line('#######################');
   a:= sql%rowcount;
   update atable set y=upper(y);
   a:= sql%rowcount;
   if a!=4 then
     raise_application_error(-20000,'fail 1');
   end if;
+  update atable set y=upper(y) where 1=2;
+  execute immediate 'update atable set y=upper(y)';
   a:= sql%rowcount;
   if a!=4 then
     raise_application_error(-20000,'fail 2');
   end if;
+  
   for r in (select * from atable )loop 
    a:= sql%rowcount;
   dbms_output.put_line('l '||a);
@@ -121,9 +125,34 @@ dbms_output.put_line('#######################');
     raise_application_error(-20000,'fail 3');
    end if;
   execute immediate 'begin dbms_output.put_Line(''aaaa'');end;';
-a:= sql%rowcount;
-  if a!=1 then
+  a:= sql%rowcount;
+  if nvl(a,-1)!=1 then
       raise_application_error(-20000,'fail 4');
+  end if;
+  update atable set y =upper(y) where 1=2;
+  select dummy into v from dual;
+  a:= sql%rowcount;
+  if nvl(a,-1)!=1 then
+    raise_application_error(-20000,'fail 5');
+  end if;
+end;
+
+
+-- luckily sql is a keyword in
+procedure abc is
+  cursor c is select * from dual;
+  a varchar2(200);
+  cursor "SQL" is select * from dual;
+begin
+  open c;
+  fetch c into a;
+  if abc.c%found then
+    dbms_output.put_line('found');
+  end if;
+  open "SQL";
+  fetch "SQL" into a;
+  if abc."SQL"%found then
+    dbms_output.put_line('found');
   end if;
 end;
 

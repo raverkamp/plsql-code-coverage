@@ -1,0 +1,23 @@
+* sql%rowcount
+
+The coverage information is stored in a database table.
+The code is instrumented with statements which check if a statement has been reached before.
+If no, this information is immediately written to the database with the help of
+an autonomous transaction. This overwrites the value in sql%rowcount and maybe 
+some other attributes of sql.
+I use sql%rowcount to check if a update modified 0 or 1 rows.
+If 0 rows then an insert will follow,
+or an exception is thrown if 1 was expected. Quite a common pattern.
+
+Solution:
+After each statement which influences sql%rowcount its value is stored in 
+variable. 
+Global variable or package variable?
+
+sql%rowcount is not affected by scopes, you can alter it in one procedure and
+read it out in another procedure, maybe even in another package.
+So instrumenting in one package for code coverage might mess up the execution in
+another package which not instrumented.
+But this is a bad style.
+
+sql is a keyword in PL/SQL. You can not use it as a identifier.
