@@ -14,57 +14,11 @@ import spinat.plsqlparser.Scanner;
 import spinat.plsqlparser.Seq;
 import spinat.plsqlparser.Token;
 
+// class to extract the needed statement information
 public class StatementExtractor {
 
-    public static class EitherExtractorOrMessage {
-
-        private final String msg;
-        private final StatementExtractor stex;
-
-        public EitherExtractorOrMessage(String msg) {
-            this.msg = msg;
-            this.stex = null;
-        }
-
-        public EitherExtractorOrMessage(StatementExtractor stex) {
-            this.msg = null;
-            this.stex = stex;
-        }
-
-        public boolean isExtractor() {
-            return this.stex != null;
-        }
-
-        public String getMessage() {
-            if (isExtractor()) {
-                throw new RuntimeException("BUG");
-            } else {
-                return this.msg;
-            }
-        }
-
-        public StatementExtractor getExtractor() {
-            if (isExtractor()) {
-                return this.stex;
-            } else {
-                throw new RuntimeException("BUG");
-            }
-        }
-
-    }
-
-    public static class ExtractionResult {
-
-        public final List<Range> statementRanges;
-        public final int firstProcedurePosition;
-
-        public ExtractionResult(List<Range> statementRanges,
-                int firstProcedurePosition) {
-            this.statementRanges = statementRanges;
-            this.firstProcedurePosition = firstProcedurePosition;
-        }
-    }
-
+    // instead of parameters to methods or global variables place the needed information
+    // in instance variables
     final String bodySource;
     final String specSource;
     final Ast.PackageSpec specAst;
@@ -76,23 +30,25 @@ public class StatementExtractor {
         this.bodySource = bodySource;
         this.specAst = specAst;
         this.bodyAst = bodyAst;
-
     }
 
-    public static EitherExtractorOrMessage create(String specSource, String bodySource) {
+    // return a statement extractor or null, if null place in msg[] a message
+    public static StatementExtractor create(String specSource, String bodySource,String[] msg) {
         final Ast.PackageSpec specAst;
-
+        if (msg.length!=1) {
+            throw new RuntimeException("message array must have length 1");
+        }
         Parser p = new Parser();
         try {
             ArrayList<Token> ts = Scanner.scanAll(specSource);
             Seq se = relevant(ts);
             specAst = p.paPackageSpec(se).v;
         } catch (ParseException ex) {
-            return new EitherExtractorOrMessage(
-                    "Error when parsing package specification: " + ex.getMessage());
+            msg[0] = "Error when parsing package specification: " + ex.getMessage();
+            return null;
         } catch (ScanException ex) {
-            return new EitherExtractorOrMessage(
-                    "Error when parsing package specification: " + ex.getMessage());
+            msg[0] = "Error when parsing package specification: " + ex.getMessage();
+            return null;
         }
 
         final Ast.PackageBody bodyAst;
@@ -101,14 +57,14 @@ public class StatementExtractor {
             Seq se = relevant(ts);
             bodyAst = p.pPackageBody.pa(se).v;
         } catch (ParseException ex) {
-            return new EitherExtractorOrMessage(
-                    "Error when parsing package body: " + ex.getMessage());
+            msg[0] = "Error when parsing package body: " + ex.getMessage();
+            return null;
         } catch (ScanException ex) {
-            return new EitherExtractorOrMessage(
-                    "Error when parsing package body: " + ex.getMessage());
+            msg[0] = "Error when parsing package body: " + ex.getMessage();
+            return null;
         }
-        return new EitherExtractorOrMessage(
-                new StatementExtractor(specSource, bodySource, specAst, bodyAst));
+        msg[0] = null;
+        return new StatementExtractor(specSource, bodySource, specAst, bodyAst);
     }
 
     private static Seq relevant(ArrayList<Token> ts) {
@@ -133,6 +89,21 @@ public class StatementExtractor {
         }
         return l;
     }
+    
+      // for instrumenting the code we need to know the ranges of the statements
+    // and the beginning of the procedure section
+    // this class carries this information
+    public static class ExtractionResult {
+
+        public final List<Range> statementRanges;
+        public final int firstProcedurePosition;
+
+        public ExtractionResult(List<Range> statementRanges,
+                int firstProcedurePosition) {
+            this.statementRanges = statementRanges;
+            this.firstProcedurePosition = firstProcedurePosition;
+        }
+    }
 
     public ExtractionResult extract(Set<String> excludedProcedures) {
 
@@ -149,6 +120,8 @@ public class StatementExtractor {
         return new ExtractionResult(ranges, x);
     }
 
+    // find the first procedure or function definition inside a package 
+    // body, this needed to place code
     public int findFirstProc(Ast.PackageBody pb) {
         for (Ast.Declaration d : pb.declarations) {
             if (d instanceof Ast.FunctionDeclaration
@@ -352,6 +325,11 @@ public class StatementExtractor {
         }
     }
 
+    // extract the public procedures and functions from the package spec
+    // return a Map, the key is the procedure name and the values
+    // is alist of all signatures, the signatures (i.e. parameter) are rendered as string
+    // the form of the renndering does not matter, we just have to be able to
+    // identify the procedures in the body
     Map<String, ArrayList<String>> getPublicPrograms() {
         HashMap<String, ArrayList<String>> res = new HashMap<>();
 

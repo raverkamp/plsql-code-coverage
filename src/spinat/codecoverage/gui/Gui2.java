@@ -361,19 +361,20 @@ public class Gui2 {
                 this.codeDisplay.setText(bodySource);
             }
 
-            StatementExtractor.EitherExtractorOrMessage eem
-                    = StatementExtractor.create(specSource, bodySource);
-            if (!eem.isExtractor()) {
+            String[] msg = new String[1];
+            StatementExtractor stex
+                    = StatementExtractor.create(specSource, bodySource, msg);
+            if (stex == null) {
                 this.startCoverageAction.setEnabled(false);
                 this.stopCoverageAction.setEnabled(false);
                 this.procedureModel.clear();
                 this.lblProcedures.setText("");
                 this.codeDisplay.setText(bodySource);
                 JOptionPane.showMessageDialog(frame.getRootPane(),
-                        eem.getMessage(), "Error on parsing", JOptionPane.ERROR_MESSAGE);
+                        msg[0], "Error on parsing", JOptionPane.ERROR_MESSAGE);
             } else {
                 List<ProcedureAndRange> prl
-                        = eem.getExtractor().getProcedureRanges();
+                        = stex.getProcedureRanges();
                 this.procedureModel.clear();
                 this.lblProcedures.setText("Procs/Funcs in " + pi.name);
                 int i = 0;
