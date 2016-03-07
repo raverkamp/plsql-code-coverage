@@ -114,6 +114,34 @@ public class Ast {
         }
     }
 
+    public static class IntervalTypeForExpr {
+
+        public final IntervalPart start;
+        public final T2<Integer, Integer> startprec;
+
+        public final IntervalPart to;
+        public final T2<Integer, Integer> toprec;
+
+        public IntervalTypeForExpr(IntervalPart start, T2<Integer, Integer> startprec,
+                IntervalPart to, T2<Integer, Integer> toprec) {
+            this.start = start;
+            this.startprec = startprec;
+            this.to = to;
+            this.toprec = toprec;
+        }
+    }
+
+    public static class CInterval extends Expression {
+
+        public final String val;
+        public final IntervalTypeForExpr intervaltype;
+
+        public CInterval(String val, IntervalTypeForExpr intervaltype) {
+            this.val = val;
+            this.intervaltype = intervaltype;
+        }
+    }
+
     public static class CNull extends Expression {
 
         public CNull() {
@@ -278,6 +306,16 @@ public class Ast {
             this.expr = expr;
         }
     }
+    
+    public static final class CastExpression extends Expression {
+        public final Expression expr;
+        public final DataType datatype;
+        
+        public CastExpression(Expression expr, DataType datatype) {
+            this.expr = expr;
+            this.datatype = datatype;
+        }
+    }
 
     public static final class VarOrCallExpression extends Expression {
 
@@ -418,16 +456,9 @@ public class Ast {
         }
     }
 
-    public static class IntervalDayToSecond extends DataType {
+    public static enum IntervalPart {
 
-        public IntervalDayToSecond() {
-        }
-    }
-
-    public static class IntervalYearToMonth extends DataType {
-
-        public IntervalYearToMonth() {
-        }
+        YEAR, MONTH, DAY, HOUR, MINUTE, SECOND
     }
 
     public static class ParameterizedType extends DataType {
@@ -440,6 +471,26 @@ public class Ast {
             this.ident = ident;
             this.var1 = var1;
             this.var2 = var2;
+        }
+    }
+
+    public static class IntervalYearToMonth extends DataType {
+
+        public final Integer yearprec;
+
+        public IntervalYearToMonth(Integer yearprec) {
+            this.yearprec = yearprec;
+        }
+    }
+
+    public static class IntervalDayToSecond extends DataType {
+
+        public final Integer dayprec;
+        public final Integer fracsecondprec;
+
+        public IntervalDayToSecond(Integer dayprec, Integer fracsecondprec) {
+            this.dayprec = dayprec;
+            this.fracsecondprec = fracsecondprec;
         }
     }
 

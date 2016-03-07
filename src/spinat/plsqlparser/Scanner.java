@@ -324,7 +324,7 @@ public class Scanner {
                 } else if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
                     return tokx(TokenType.Ident, scanIdent(this.start));
                 } else {
-                    throw new ScanException("unhandled char: " + c + " at line" + this.line);
+                    throw new ScanException("unhandled char: " + c + " at line " + this.line);
                 }
         }
     }

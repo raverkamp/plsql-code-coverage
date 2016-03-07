@@ -88,7 +88,7 @@ public final class OracleLogin {
 
         fTns.setEnabled(false);
 
-        setPrefferedWidth(fPort, 50);
+        setPrefferedWidth(fPort, 60);
         setMaxSize(fPort);
 
         rbThin.setText("Thin");
