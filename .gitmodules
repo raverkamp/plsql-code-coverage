@@ -1,0 +1,3 @@
+[submodule "plsql-parser"]
+	path = plsql-parser
+	url = https://github.com/raverkamp/plsql-parser.git
