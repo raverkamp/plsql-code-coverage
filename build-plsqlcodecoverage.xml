@@ -7,6 +7,7 @@
     <property name="src" location="src"/>
     <property name="build" location="build"/>
     <property name="dist"  location="dist"/>
+    <property name="parser_src" location="plsql-parser/src"/>
     <property name="oracjdbclib" value="${env.orajdbclib}"/>
     <basename property="oracjdbclib_base" file="${oracjdbclib}"/>
     <property name="jre7" value="${env.jre7}"/>
@@ -24,11 +25,13 @@
   
     <target name="compile" depends="init"
           description="compile the source " >
-        <javac target="1.7" source="1.7" srcdir="${src}" destdir="${build}" 
+        <javac target="1.7" source="1.7" destdir="${build}" 
            includeantruntime="false"
            bootclasspath="${jre7}/lib/rt.jar"
            deprecation="true"
            debug="true">
+            <src path="${src}" />
+            <src path="${parser_src}" />
             <compilerarg value="-Xlint:unchecked"/>
             <classpath>
                 <pathelement location="${oracjdbclib}"/>
