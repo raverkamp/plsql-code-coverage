@@ -54,14 +54,14 @@ public class CodeInstrumenter {
         Class cl = this.getClass();
         final String logstufff = Util.getAsciiResource(cl, "/otherstuff/logstuff.txt");
 
-        patches.add(new Patch(firstProc, firstProc, logstufff.replace("$id", "" + id)));
+        patches.add(new Patch(firstProc, Patch.Position.LEADING, logstufff.replace("$id", "" + id)));
         ArrayList<InstrumentedStatement> is = new ArrayList<>();
 
         int i = 0;
         for (Range r : ranges) {
             i++;
             is.add(new InstrumentedStatement(r, i));
-            patches.add(new Patch(r.start, r.start,
+            patches.add(new Patch(r.start, Patch.Position.LEADING,
                     "\"$log\"(" + (i + 1) + ");"));
         }
 
