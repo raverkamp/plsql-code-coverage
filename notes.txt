@@ -21,3 +21,12 @@ another package which not instrumented.
 But this is a bad style.
 
 sql is a keyword in PL/SQL. You can not use it as a identifier.
+
+The sql attributes found, notfound and isopen are boolean.
+The attribute bulk_rowcount is different:
+
+SQL%BULK_ROWCOUNT is like an associative array whose ith element is the number 
+of rows affected by the ith DML statement in the most recently completed FORALL 
+statement.
+
+So maybe not a problem.
