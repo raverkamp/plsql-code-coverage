@@ -106,8 +106,11 @@ public class StatementExtractor {
     // this class carries this information
     public static class ExtractionResult {
 
+        // the ranges of all statements
         public final List<Range> statementRanges;
+        // the ranges of all statements that change an sql% attribute, dml
         public final List<Range> sqlAttrChangers;
+        // all sql%... expressions
         public final List<SqlAttrExprAndRange> sqlAttrExpressions;
         public final int firstProcedurePosition;
 
@@ -122,12 +125,14 @@ public class StatementExtractor {
         }
     }
 
+    // extract the required information
+    // but skip the excluded procedures
     public ExtractionResult extract(Set<String> excludedProcedures) {
 
         Ast.PackageBody pb = this.bodyAst;
         ArrayList<Ast.Statement> l = new ArrayList<>();
-        ArrayList<Ast.SqlAttribute> el = new ArrayList<>();
-        getPackageBodyStatements(pb, l, el, excludedProcedures);
+        ArrayList<Ast.Expression> el = new ArrayList<>();
+        getPackageBodyStatementsAndExpressions(pb, l, el, excludedProcedures);
         ArrayList<Range> ranges = new ArrayList<>();
         ArrayList<Range> sql_attr_changer_ranges = new ArrayList<>();
 
@@ -140,9 +145,12 @@ public class StatementExtractor {
             }
         }
         ArrayList<SqlAttrExprAndRange> sel = new ArrayList<>();
-        for (Ast.SqlAttribute a : el) {
-            SqlAttrExprAndRange s = new SqlAttrExprAndRange(a.attribute.name(), new Range(a.getStart(), a.getEnd()));
-            sel.add(s);
+        for (Ast.Expression e : el) {
+            if (e instanceof Ast.SqlAttribute) {
+                Ast.SqlAttribute a = (Ast.SqlAttribute) e;
+                SqlAttrExprAndRange s = new SqlAttrExprAndRange(a.attribute.name(), new Range(a.getStart(), a.getEnd()));
+                sel.add(s);
+            }
         }
 
         int first_proc_pos = findFirstProc(pb);
@@ -164,7 +172,11 @@ public class StatementExtractor {
         throw new RuntimeException("no proc or fun");
     }
 
-    void getPackageBodyStatements(Ast.PackageBody b, ArrayList<Ast.Statement> l, ArrayList<Ast.SqlAttribute> el, Set<String> excludedProcedures) {
+    // the code walker, excluded procedures will be skipped
+    void getPackageBodyStatementsAndExpressions(Ast.PackageBody b, 
+            ArrayList<Ast.Statement> l, 
+            ArrayList<Ast.Expression> el, 
+            Set<String> excludedProcedures) {
         declStatements(b.declarations, l, excludedProcedures, el);
         if (b.statements != null) {
             checkStatements(b.statements, l, el);
@@ -179,25 +191,25 @@ public class StatementExtractor {
         }
     }
 
-    void procedureStatements(Ast.ProcedureDefinition b, ArrayList<Ast.Statement> l, ArrayList<Ast.SqlAttribute> el) {
+    void procedureStatements(Ast.ProcedureDefinition b, ArrayList<Ast.Statement> l, ArrayList<Ast.Expression> el) {
         declStatements(b.block.declarations, l, null, el);
         if (b.block != null) {
             blockStatements(b.block, l, el);
         }
     }
 
-    void functionStatements(Ast.FunctionDefinition b, ArrayList<Ast.Statement> l, ArrayList<Ast.SqlAttribute> el) {
+    void functionStatements(Ast.FunctionDefinition b, ArrayList<Ast.Statement> l, ArrayList<Ast.Expression> el) {
         declStatements(b.block.declarations, l, null, el);
         if (b.block != null) {
             blockStatements(b.block, l, el);
         }
     }
 
-    void arrayStatements(List<Ast.Statement> stml, ArrayList<Ast.Statement> l, ArrayList<Ast.SqlAttribute> el) {
+    void arrayStatements(List<Ast.Statement> stml, ArrayList<Ast.Statement> l, ArrayList<Ast.Expression> el) {
         checkStatements(stml, l, el);
     }
 
-    void declStatements(List<Ast.Declaration> d, ArrayList<Ast.Statement> l, Set<String> exclude, ArrayList<Ast.SqlAttribute> el) {
+    void declStatements(List<Ast.Declaration> d, ArrayList<Ast.Statement> l, Set<String> exclude, ArrayList<Ast.Expression> el) {
         if (d != null) {
             for (Ast.Declaration decl : d) {
                 if (exclude != null) {
@@ -219,9 +231,26 @@ public class StatementExtractor {
         }
     }
 
+    void checkActualParams(List<Ast.ActualParam> ps, ArrayList<Ast.Expression> l) {
+        for (Ast.ActualParam p : ps) {
+            checkExpression(p.expr, l);
+        }
+    }
+
+    void checkCallParts(List<Ast.CallPart> cps, ArrayList<Ast.Expression> l) {
+        for (Ast.CallPart cp : cps) {
+            if (cp instanceof Ast.Component) {
+                // nix
+            } else if (cp instanceof Ast.CallOrIndexOp) {
+                Ast.CallOrIndexOp o = (Ast.CallOrIndexOp) cp;
+                checkActualParams(o.params, l);
+            }
+        }
+    }
+
     // extract the sql%something expressions from an expression
     // not finished !
-    void checkExpression(Ast.Expression expr, ArrayList<Ast.SqlAttribute> l) {
+    void checkExpression(Ast.Expression expr, ArrayList<Ast.Expression> l) {
         if (expr == null) {
             return;
         }
@@ -245,10 +274,79 @@ public class StatementExtractor {
         } else if (expr instanceof Ast.ParenExpr) {
             Ast.ParenExpr e = (Ast.ParenExpr) expr;
             checkExpression(e.expr, l);
+        } else if (expr instanceof Ast.BinopExpression) {
+            Ast.BinopExpression e = (Ast.BinopExpression) expr;
+            checkExpression(e.expr1, l);
+            checkExpression(e.expr2, l);
+        } else if (expr instanceof Ast.CaseBoolExpression) {
+            Ast.CaseBoolExpression e = (Ast.CaseBoolExpression) expr;
+            checkExpression(e.default_, l);
+            for (Ast.CaseExpressionPart o : e.cases) {
+                checkExpression(o.cond, l);
+                checkExpression(o.result, l);
+            }
+        } else if (expr instanceof Ast.CaseMatchExpression) {
+            Ast.CaseMatchExpression e = (Ast.CaseMatchExpression) expr;
+            checkExpression(e.default_, l);
+            for (Ast.CaseExpressionPart o : e.matches) {
+                checkExpression(o.cond, l);
+                checkExpression(o.result, l);
+            }
+        } else if (expr instanceof Ast.CastExpression) {
+            Ast.CastExpression e = (Ast.CastExpression) expr;
+            checkExpression(e.expr, l);
+        } else if (expr instanceof Ast.ExtractDatePart) {
+            Ast.ExtractDatePart e = (Ast.ExtractDatePart) expr;
+            checkExpression(e.expr, l);
+        } else if (expr instanceof Ast.InExpression) {
+            Ast.InExpression e = (Ast.InExpression) expr;
+            checkExpression(e.expr, l);
+            for (Ast.Expression es : e.set) {
+                checkExpression(es, l);
+            }
+        } else if (expr instanceof Ast.IsNullExpr) {
+            Ast.IsNullExpr e = (Ast.IsNullExpr) expr;
+            checkExpression(e.expr, l);
+        } else if (expr instanceof Ast.LValue) {
+            // yes! a(sql%rowcount) := true   .... sick
+            Ast.LValue e = (Ast.LValue) expr;
+            checkCallParts(e.callparts, l);
+        } else if (expr instanceof Ast.LikeExpression) {
+            Ast.LikeExpression e = (Ast.LikeExpression) expr;
+            checkExpression(e.escape, l);
+            checkExpression(e.expr1, l);
+            checkExpression(e.expr2, l);
+        } else if (expr instanceof Ast.MultisetExpr) {
+            Ast.MultisetExpr e = (Ast.MultisetExpr) expr;
+            checkExpression(e.e1, l);
+            checkExpression(e.e2, l);
+        } else if (expr instanceof Ast.NewExpression) {
+            Ast.NewExpression e = (Ast.NewExpression) expr;
+            checkCallParts(e.callParts, l);
+        } else if (expr instanceof Ast.UnaryMinusExpression) {
+            Ast.UnaryMinusExpression e = (Ast.UnaryMinusExpression) expr;
+            checkExpression(e.expr, l);
+        } else if (expr instanceof Ast.UnaryPlusExpression) {
+            Ast.UnaryPlusExpression e = (Ast.UnaryPlusExpression) expr;
+            checkExpression(e.expr, l);
+        } else if (expr instanceof Ast.VarOrCallExpression) {
+            Ast.VarOrCallExpression e = (Ast.VarOrCallExpression) expr;
+            checkCallParts(e.callparts, l);
+        } else if (expr instanceof Ast.CString
+                || expr instanceof Ast.CBool
+                || expr instanceof Ast.CNumber
+                || expr instanceof Ast.CDate
+                || expr instanceof Ast.CNull
+                || expr instanceof Ast.DollarDollar
+                || expr instanceof Ast.CursorAttribute
+                || expr instanceof Ast.CInterval) {
+            // nothing to do                           
+        } else {
+            throw new RuntimeException("missing check for expression type " + expr.getClass());
         }
     }
 
-    void checkDecl(Ast.Declaration d, ArrayList<Ast.Statement> l, ArrayList<Ast.SqlAttribute> el) {
+    void checkDecl(Ast.Declaration d, ArrayList<Ast.Statement> l, ArrayList<Ast.Expression> el) {
         if (d instanceof Ast.ProcedureDefinition) {
             Ast.ProcedureDefinition def = (Ast.ProcedureDefinition) d;
             blockStatements(def.block, l, el);
@@ -259,9 +357,13 @@ public class StatementExtractor {
             blockStatements(def.block, l, el);
 
         }
+        if (d instanceof Ast.VariableDeclaration) {
+            Ast.VariableDeclaration vd = (Ast.VariableDeclaration) d;
+            checkExpression(vd.default_,el);
+        }
     }
 
-    void checkStatement(Ast.Statement s, ArrayList<Ast.Statement> l, ArrayList<Ast.SqlAttribute> el) {
+    void checkStatement(Ast.Statement s, ArrayList<Ast.Statement> l, ArrayList<Ast.Expression> el) {
         if (s == null) {
             return;
         }
@@ -348,7 +450,7 @@ public class StatementExtractor {
         }
     }
 
-    void checkStatements(List<Ast.Statement> s, ArrayList<Ast.Statement> l, ArrayList<Ast.SqlAttribute> el) {
+    void checkStatements(List<Ast.Statement> s, ArrayList<Ast.Statement> l, ArrayList<Ast.Expression> el) {
         for (Ast.Statement stm : s) {
             if (stm == null) {
             }
@@ -356,7 +458,7 @@ public class StatementExtractor {
         }
     }
 
-    private void blockStatements(Ast.Block block, ArrayList<Ast.Statement> l, ArrayList<Ast.SqlAttribute> el) {
+    private void blockStatements(Ast.Block block, ArrayList<Ast.Statement> l, ArrayList<Ast.Expression> el) {
         declStatements(block.declarations, l, null, el);
         checkStatements(block.statements, l, el);
         if (block.exceptionBlock != null) {
