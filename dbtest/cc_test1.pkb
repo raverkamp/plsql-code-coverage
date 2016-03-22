@@ -156,5 +156,35 @@ begin
   end if;
 end;
 
+procedure test_forall_ind is
+type tab_tp is table of integer index by binary_integer;
+tab tab_tp;
+x integer;
+begin
+for i in 1.. 10 loop
+  tab(i*4) := i;
+end loop;
+forall j in INDICES of tab
+   update atable
+   set y = tab(j)
+   where x = tab(j);
+end;
+
+procedure test_forall_val is
+type tab_tp is table of binary_integer index by binary_integer;
+tab tab_tp;
+x integer;
+begin
+for i in 1.. 10 loop
+  tab(i*4) := i;
+end loop;
+forall j in values of tab
+   update atable
+   set y = tab(j)
+   where x = tab(j);
+end;
+
+
+
 end;
 /
