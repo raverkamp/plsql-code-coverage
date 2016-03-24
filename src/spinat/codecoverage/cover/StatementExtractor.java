@@ -173,9 +173,9 @@ public class StatementExtractor {
     }
 
     // the code walker, excluded procedures will be skipped
-    void getPackageBodyStatementsAndExpressions(Ast.PackageBody b, 
-            ArrayList<Ast.Statement> l, 
-            ArrayList<Ast.Expression> el, 
+    void getPackageBodyStatementsAndExpressions(Ast.PackageBody b,
+            ArrayList<Ast.Statement> l,
+            ArrayList<Ast.Expression> el,
             Set<String> excludedProcedures) {
         declStatements(b.declarations, l, excludedProcedures, el);
         if (b.statements != null) {
@@ -359,7 +359,7 @@ public class StatementExtractor {
         }
         if (d instanceof Ast.VariableDeclaration) {
             Ast.VariableDeclaration vd = (Ast.VariableDeclaration) d;
-            checkExpression(vd.default_,el);
+            checkExpression(vd.default_, el);
         }
     }
 
@@ -429,10 +429,29 @@ public class StatementExtractor {
             checkExpression(x.condition, el);
         } else if (s instanceof Ast.ProcedureCall) {
             Ast.ProcedureCall pc = (Ast.ProcedureCall) s;
-            // fixme
+            for (Ast.CallPart cp : pc.callparts) {
+                if (cp instanceof Ast.CallOrIndexOp) {
+                    for (Ast.ActualParam ap : ((Ast.CallOrIndexOp) cp).params) {
+                        checkExpression(ap.expr, el);
+                    }
+                }
+            }
         } else if (s instanceof Ast.ExecuteImmediateDML) {
             // fixme
-
+        } else if (s instanceof Ast.ForAllStatement) {
+            Ast.ForAllStatement fa = (Ast.ForAllStatement) s;
+            if (fa.bounds instanceof Ast.FromToBounds) {
+                Ast.FromToBounds ftb = (Ast.FromToBounds) fa.bounds;
+                checkExpression(ftb.from, el);
+                checkExpression(ftb.to, el);
+            } else if (fa.bounds instanceof Ast.ValuesBounds) {
+                checkExpression(((Ast.ValuesBounds) fa.bounds).collection, el);
+            } else if (fa.bounds instanceof Ast.IndicesBounds) {
+                Ast.IndicesBounds ib = (Ast.IndicesBounds) fa.bounds;
+                checkExpression(ib.idx_collection, el);
+                checkExpression(ib.lower, el);
+                checkExpression(ib.upper, el);
+            }
         } else // no simple else clause to make sire we catch everything
         if (s instanceof Ast.NullStatement
                 || s instanceof Ast.Rollback

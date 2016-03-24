@@ -135,8 +135,11 @@ begin
   if nvl(a,-1)!=1 then
     raise_application_error(-20000,'fail 5');
   end if;
+   select dummy into v from dual;
+   if to_number(to_char(sql%rowcount)) != 1 then
+     raise_application_error(-20000,'fail 6');
+   end if;
 end;
-
 
 -- luckily sql is a keyword in
 procedure abc is
