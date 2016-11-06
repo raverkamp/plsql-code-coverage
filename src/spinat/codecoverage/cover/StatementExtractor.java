@@ -9,6 +9,7 @@ import java.util.Set;
 import spinat.plsqlparser.Ast;
 import spinat.plsqlparser.ParseException;
 import spinat.plsqlparser.Parser;
+import spinat.plsqlparser.Range;
 import spinat.plsqlparser.ScanException;
 import spinat.plsqlparser.Scanner;
 import spinat.plsqlparser.Seq;

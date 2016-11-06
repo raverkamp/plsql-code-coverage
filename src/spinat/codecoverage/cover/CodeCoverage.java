@@ -12,6 +12,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.*;
+import spinat.plsqlparser.Range;
 
 public class CodeCoverage {
 

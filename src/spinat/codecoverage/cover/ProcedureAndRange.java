@@ -1,5 +1,7 @@
 package spinat.codecoverage.cover;
 
+import spinat.plsqlparser.Range;
+
 public class ProcedureAndRange {
 
     public final String name;
