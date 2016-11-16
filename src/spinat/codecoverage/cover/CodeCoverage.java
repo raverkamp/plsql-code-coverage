@@ -70,10 +70,12 @@ public class CodeCoverage {
 
     public ArrayList<PackInfo> getCCInfo() throws SQLException {
         ArrayList<PackInfo> res = new ArrayList<>();
-        try (CallableStatement stm = connection.prepareCall(query + " order by 1");
-                ResultSet rs = stm.executeQuery()) {
-            while (rs.next()) {
-                res.add(packInfoFromRes(rs));
+        try (CallableStatement stm = connection.prepareCall(query + " order by 1")) {
+            stm.setFetchSize(10000);
+            try (ResultSet rs = stm.executeQuery()) {
+                while (rs.next()) {
+                    res.add(packInfoFromRes(rs));
+                }
             }
         }
         return res;
@@ -138,8 +140,10 @@ public class CodeCoverage {
                     stm.setInt(4, r.end);
                     stm.setString(5, bodysource.substring(r.start, Math.min(r.end, r.start + 50)));
                     stm.setString(6, bodysource.substring(Math.max(r.start, r.end - 50), r.end));
-                    stm.execute();
+                    stm.addBatch();
+                    
                 }
+                stm.executeBatch();
             }
             try (PreparedStatement stm = connection.prepareStatement(
                     "update aaa_coverage set hash_of_covered_code =? where id = ?")) {
@@ -245,6 +249,7 @@ public class CodeCoverage {
                         "select stm_no, line_no, hit, start_, end_ "
                         + " from aaa_coverage_statements where cvr_id = ?")) {
                     stm.setInt(1, id);
+                    stm.setFetchSize(10000);
                     ArrayList<CoveredStatement> l;
                     try (ResultSet rs = stm.executeQuery()) {
                         l = new ArrayList<>();
@@ -300,6 +305,7 @@ public class CodeCoverage {
     String getObjectSource(String owner, String object_type, String object_name) throws SQLException {
         // this fetch the code from user_source
         try (PreparedStatement stm = this.connection.prepareStatement("select text from all_source where owner = ? and type=? and name = ? order by line")) {
+            stm.setFetchSize(10000);
             stm.setString(1, owner);
             stm.setString(2, object_type);
             stm.setString(3, object_name);
@@ -325,13 +331,15 @@ public class CodeCoverage {
         try (PreparedStatement pst = this.connection.prepareStatement(
                 "select distinct name from user_source "
                 + "where text like '%\"$log\"%' "
-                + " and type like 'PACKAGE BODY' order by 1");
-                ResultSet rs = pst.executeQuery()) {
-            ArrayList<String> a = new ArrayList<>();
-            while (rs.next()) {
-                a.add(rs.getString(1));
+                + " and type like 'PACKAGE BODY' order by 1")) {
+            pst.setFetchSize(10000);
+            try (ResultSet rs = pst.executeQuery()) {
+                ArrayList<String> a = new ArrayList<>();
+                while (rs.next()) {
+                    a.add(rs.getString(1));
+                }
+                return a;
             }
-            return a;
         }
     }
 }
