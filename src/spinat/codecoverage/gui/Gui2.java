@@ -176,6 +176,10 @@ public class Gui2 {
         JButton b2 = new JButton(stopCoverageAction);
         top.add(b2);
         stopCoverageAction.setEnabled(false);
+        
+        JButton b3 = new JButton(refreshAction);
+        top.add(b3);
+        //stopCoverageAction.setEnabled(false);
 
         right.add(top, BorderLayout.NORTH);
 
@@ -546,6 +550,17 @@ public class Gui2 {
             stopCoverage();
         }
     };
+    
+    Action refreshAction = new AbstractAction("Refresh") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    refresh();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        };
 
     public static boolean askYesNo(Component parent, String txt, String title) {
         Object[] options = {"Yes",
@@ -584,16 +599,7 @@ public class Gui2 {
             }
         });
 
-        m.add(new AbstractAction("Refresh") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    refresh();
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
+        m.add(this.refreshAction);
 
         m.add(this.dropCCObjects);
 
