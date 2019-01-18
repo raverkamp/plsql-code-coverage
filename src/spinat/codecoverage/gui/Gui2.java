@@ -183,7 +183,7 @@ public class Gui2 {
 
         right.add(top, BorderLayout.NORTH);
 
-        this.codeDisplay = new CodeDisplay();
+        this.codeDisplay = new CodeDisplay(16);
         right.add(codeDisplay.getComponent(), BorderLayout.CENTER);
     }
 

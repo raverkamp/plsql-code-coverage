@@ -25,11 +25,11 @@ public class CodeDisplay {
         return scrollPane;
     }
 
-    public CodeDisplay() {
+    public CodeDisplay(int fontSize) {
         sourceTextPane = new JTextPane();
         // must be here, otherwise too late
-        sourceTextPane.setEditorKit(new SourceEditorKit(20));
-        initStyles();
+        sourceTextPane.setEditorKit(new SourceEditorKit(fontSize+8));
+        initStyles(fontSize);
 
         scrollPane = new JScrollPane(sourceTextPane);
         scrollPane.setVerticalScrollBarPolicy(
@@ -46,12 +46,12 @@ public class CodeDisplay {
     Style hotStyle;
     Style greenStyle;
 
-    final void initStyles() {
+    final void initStyles(int fontSize) {
         Style defaultStyle = StyleContext.getDefaultStyleContext().
                 getStyle(StyleContext.DEFAULT_STYLE);
         defStyle = StyleContext.getDefaultStyleContext().addStyle("hot", defaultStyle);
         StyleConstants.setFontFamily(defStyle, Font.MONOSPACED);
-        StyleConstants.setFontSize(defStyle, 12);
+        StyleConstants.setFontSize(defStyle, fontSize);
         StyleConstants.setForeground(defStyle, Color.black);
         hotStyle = StyleContext.getDefaultStyleContext().addStyle("hot", defStyle);
         StyleConstants.setBackground(hotStyle, new Color(255, 200, 200));
