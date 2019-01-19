@@ -3,12 +3,15 @@ package spinat.codecoverage.gui;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
@@ -59,8 +62,15 @@ public class CodeDisplay {
         StyleConstants.setBackground(greenStyle, new Color(200, 255, 200));
     }
 
-    public void gotoTextPosition(int pos) {
-        this.sourceTextPane.setCaretPosition(pos);
+    public void gotoTextPosition(int pos) throws BadLocationException {
+        Rectangle r = this.sourceTextPane.modelToView(pos);
+        scrollPane.getViewport().setViewPosition(new Point(0,r.y));
+        // another way would have been:
+        // this.sourceTextPane.setCaretPosition(pos);
+        // but the then first line of the procedure might be shown in the last 
+        // shown line, this is ugly
+        // setViewPosition just goes to the end of the document if the
+        // view position is to far
     }
 
     public void setText(String txt) {
