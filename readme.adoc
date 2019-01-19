@@ -76,9 +76,9 @@ To build the system, run
 ----
 where target is one of the following:
 
-* +dist+: create a jar file +psqlcodecoverage.jar+ in the directory +dist+.
-The folder lib in the same directory contains the file +ojdbc6.jar+
-which is referenced in the manifest of +psqlcodecoverage.jar+.
+* +dist+: create a jar file +main.jar+ in the directory +dist/plsqlcodecoverage+.
+The folder contains the file +ojdbc8.jar+
+which is referenced in the manifest of +main.jar+.
 * +dist-fat+: create a jar file +psqlcodecoverage.jar+ in the directory dist.
 This jar file contains the class files of the project as well as the class files
 of the oracle jdbc library.
@@ -93,8 +93,12 @@ location stored in the preferences is deleted.
 == How to use
 Run the program with
 ----
-java -jar psqlcodecoverage.jar
+java -jar psqlcodecoverage/main.jar
 ----
+or
+---
+java -jar psqlcodecoverage.jar
+---
 If you are using the jar file created by the target dist, the lib directory 
 with the oracle jar file must be in the same directory as +psqlcodecoverage.jar+.
 

@@ -41,15 +41,15 @@
   
     <target name="dist" depends="compile"
           description="generate the distribution, with the main jar and a manifest which references the oracle jdbc file" >
-        <mkdir dir="${dist}/lib"/>
-        <copy file="${oracjdbclib}" todir="${dist}/lib"/>
-        <jar jarfile="${dist}/plsqlcodecoverage.jar" basedir="${build}">
+        <mkdir dir="${dist}/plsqlcodecoverage"/>
+        <copy file="${oracjdbclib}" todir="${dist}/plsqlcodecoverage"/>
+        <jar jarfile="${dist}/plsqlcodecoverage/main.jar" basedir="${build}">
             <!-- needed for the image file -->
             <zipfileset dir="src/otherstuff" includes="*" prefix="otherstuff"/>
             <manifest>
                 <attribute name="Main-Class"
                    value="spinat.codecoverage.Main"/>
-                <attribute name="Class-Path" value="lib/${oracjdbclib_base}"/>
+                <attribute name="Class-Path" value="./${oracjdbclib_base}"/>
             </manifest>
         </jar>
     </target>
