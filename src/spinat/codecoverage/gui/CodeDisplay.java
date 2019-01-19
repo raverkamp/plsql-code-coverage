@@ -62,8 +62,14 @@ public class CodeDisplay {
         StyleConstants.setBackground(greenStyle, new Color(200, 255, 200));
     }
 
-    public void gotoTextPosition(int pos) throws BadLocationException {
-        Rectangle r = this.sourceTextPane.modelToView(pos);
+    public void gotoTextPosition(int pos) {
+        Rectangle r;
+        try {
+            r = this.sourceTextPane.modelToView(pos);
+        } catch (BadLocationException ex) {
+            ex.printStackTrace(System.err);
+            return;
+        }
         scrollPane.getViewport().setViewPosition(new Point(0,r.y));
         // another way would have been:
         // this.sourceTextPane.setCaretPosition(pos);
