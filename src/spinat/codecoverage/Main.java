@@ -18,17 +18,7 @@ public class Main {
             System.exit(0);
         }
 
-        try {
-            for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-        }
-
+        UIManager.setLookAndFeel(new javax.swing.plaf.metal.MetalLookAndFeel());
         ClassLoader cl = factoryCL.mkClassLoader(Main.class.getClassLoader());
         Class realMainClass = cl.loadClass("spinat.codecoverage.RealMain");
         Method m = realMainClass.getMethod("main", new String[0].getClass());
