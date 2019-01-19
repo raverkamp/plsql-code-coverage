@@ -53,9 +53,6 @@ public class Gui2 {
 
     public Gui2() {
 
-        Color hotColor = new Color(255, 200, 200);
-        Color coolColor = new Color(200, 255, 200);
-
         this.codeCoverage = null;
         this.connection = null;
         this.connectionDesc = null;
