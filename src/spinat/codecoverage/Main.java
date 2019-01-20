@@ -1,8 +1,13 @@
 package spinat.codecoverage;
 
+import java.awt.Font;
 import java.lang.reflect.Method;
+import java.util.Enumeration;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.plaf.metal.MetalLookAndFeel;
+import javax.swing.plaf.metal.OceanTheme;
 
 public class Main {
 
@@ -18,7 +23,6 @@ public class Main {
             System.exit(0);
         }
 
-        UIManager.setLookAndFeel(new javax.swing.plaf.metal.MetalLookAndFeel());
         ClassLoader cl = factoryCL.mkClassLoader(Main.class.getClassLoader());
         Class realMainClass = cl.loadClass("spinat.codecoverage.RealMain");
         Method m = realMainClass.getMethod("main", new String[0].getClass());

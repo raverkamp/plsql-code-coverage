@@ -50,8 +50,13 @@ public class Gui2 {
     private final CodeDisplay codeDisplay;
 
     private PackInfo currentPackinfo = null;
+    
+    private final int defaultFontSize;
+    private final  double scale;
 
-    public Gui2() {
+    public Gui2(int defaultFontSize, double scale) {
+        this.defaultFontSize = defaultFontSize;
+        this.scale = scale;
 
         this.codeCoverage = null;
         this.connection = null;
@@ -63,9 +68,11 @@ public class Gui2 {
         frame.setPreferredSize(new Dimension(800, 600));
 
         frame.setLayout(new BorderLayout());
+        JSplitPane jsp = new JSplitPane();
         JPanel left = new JPanel();
         installMenues();
-        frame.add(left, BorderLayout.WEST);
+        jsp.setLeftComponent(left);
+        frame.add(jsp, BorderLayout.CENTER);
         left.setLayout(new GridBagLayout());
         left.setPreferredSize(new Dimension(350, 100));
 
@@ -93,10 +100,10 @@ public class Gui2 {
             c.weightx = 1;
             c.fill = GridBagConstraints.BOTH;
             c.anchor = GridBagConstraints.PAGE_START;
-            JScrollPane jsp = new JScrollPane(packList,
+            JScrollPane jsp1 = new JScrollPane(packList,
                     JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                     JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            left.add(jsp, c);
+            left.add(jsp1, c);
         }
         packList.setCellRenderer(new PackageCellRenderer());
         packList.getSelectionModel().addListSelectionListener(
@@ -130,10 +137,10 @@ public class Gui2 {
             c.weightx = 1;
             c.fill = GridBagConstraints.BOTH;
             c.anchor = GridBagConstraints.PAGE_START;
-            JScrollPane jsp = new JScrollPane(procList,
+            JScrollPane jsp2 = new JScrollPane(procList,
                     JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                     JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            left.add(jsp, c);
+            left.add(jsp2, c);
         }
         procList.setCellRenderer(new ProcedureCellRenderer());
 
@@ -147,7 +154,8 @@ public class Gui2 {
         //this.procedureModel.add(0, new ProcedureInfo("Test"));
         JPanel right = new JPanel();
         right.setLayout(new BorderLayout());
-        frame.add(right, BorderLayout.CENTER);
+        jsp.setRightComponent(right);
+        //frame.add(right, BorderLayout.CENTER);
         JPanel top = new JPanel();
         top.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
 
@@ -180,7 +188,7 @@ public class Gui2 {
 
         right.add(top, BorderLayout.NORTH);
 
-        this.codeDisplay = new CodeDisplay(16);
+        this.codeDisplay = new CodeDisplay((int) (scale * defaultFontSize));
         right.add(codeDisplay.getComponent(), BorderLayout.CENTER);
     }
 
