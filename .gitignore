@@ -7,3 +7,4 @@ config.sh
 *.bak
 readme.html
 /libs/ojdbc7.jar
+/libs/ojdbc8.jar
